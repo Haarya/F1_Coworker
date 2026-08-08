@@ -1,5 +1,5 @@
 from transformers import pipeline
-from ..config import settings
+from config import settings
 import logging
 import torch
 

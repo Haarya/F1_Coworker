@@ -1,6 +1,6 @@
 import numpy as np
-from ..models.whisper import WhisperModel
-from ..schemas.radio import Transcript, WordTimestamp
+from models.whisper import WhisperModel
+from schemas.radio import Transcript, WordTimestamp
 
 async def transcribe_audio(audio_array: np.ndarray, sampling_rate: int = 16000) -> Transcript:
     pipe = WhisperModel.get_instance()

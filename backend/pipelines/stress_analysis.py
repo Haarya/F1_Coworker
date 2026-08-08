@@ -1,8 +1,8 @@
 import numpy as np
 import librosa
-from ..models.wav2vec2_emotion import EmotionModel
-from ..schemas.analysis import StressResult, EmotionScores
-from ..config import settings
+from models.wav2vec2_emotion import EmotionModel
+from schemas.analysis import StressResult, EmotionScores
+from config import settings
 
 async def analyze_stress(audio_array: np.ndarray, sampling_rate: int = 16000) -> StressResult:
     pipe = EmotionModel.get_instance()

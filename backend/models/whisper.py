@@ -1,6 +1,6 @@
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
 import torch
-from ..config import settings
+from config import settings
 import logging
 
 logger = logging.getLogger(__name__)

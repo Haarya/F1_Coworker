@@ -18,6 +18,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from routes import telemetry, circuit
+
 @app.get("/health")
 async def health_check():
     return {"status": "ok", "message": "Silent Co-Driver Backend is running"}
+
+app.include_router(telemetry.router)
+app.include_router(circuit.router)
