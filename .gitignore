@@ -6,3 +6,10 @@
 # Ignore env files
 .env
 .env.local
+
+# Python & Backend
+__pycache__/
+*.py[cod]
+*$py.class
+backend/venv/
+backend/data/
