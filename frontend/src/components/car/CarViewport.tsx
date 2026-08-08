@@ -7,7 +7,7 @@ import CarPlaceholder from './CarPlaceholder';
 
 // If you have a car.glb in your public folder, pass the url here. 
 // Otherwise it falls back gracefully to the placeholder.
-const GLB_URL = '/models/ferrari.glb';
+const GLB_URL = ''; // e.g. '/car.glb'
 
 function CarModel({ url, clIndex }: { url: string; clIndex: number }) {
   const { scene } = useGLTF(url);

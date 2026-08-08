@@ -4,7 +4,8 @@ import { useGLTF, useScroll, Environment } from '@react-three/drei';
 import * as THREE from 'three';
 
 export default function LandingScene() {
-  const { scene } = useGLTF('/models/ferrari.glb');
+  // Fallback for missing GLB file to prevent crash
+  // const { scene } = useGLTF('/models/ferrari.glb');
   const scroll = useScroll();
   const { camera } = useThree();
   
@@ -80,10 +81,15 @@ export default function LandingScene() {
 
       {/* Car Group (No rotation, perfectly stable) */}
       <group ref={carGroup}>
-        <primitive object={scene} />
+        {/* <primitive object={scene} /> */}
+        {/* Placeholder mesh since ferrari.glb is missing */}
+        <mesh position={[0, 0.5, 0]}>
+          <boxGeometry args={[1.5, 0.8, 3]} />
+          <meshStandardMaterial color="#E31D2B" wireframe />
+        </mesh>
       </group>
     </>
   );
 }
 
-useGLTF.preload('/models/ferrari.glb');
+// useGLTF.preload('/models/ferrari.glb');
