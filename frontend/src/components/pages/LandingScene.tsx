@@ -4,7 +4,7 @@ import { useGLTF, useScroll, Environment } from '@react-three/drei';
 import * as THREE from 'three';
 
 export default function LandingScene() {
-  const { scene } = useGLTF('/models/ferrari.glb');
+  const { scene } = useGLTF('/models/ferrari.glb?v=4');
   const scroll = useScroll();
   const { camera } = useThree();
   
@@ -86,4 +86,4 @@ export default function LandingScene() {
   );
 }
 
-useGLTF.preload('/models/ferrari.glb');
+useGLTF.preload('/models/ferrari.glb?v=4');

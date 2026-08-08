@@ -1,10 +1,8 @@
-# Ignore large 3D model files
-*.glb
-*.gltf
-
-# Ignore node_modules
-node_modules/
-
+# Ignore large 3D model files (removed because we are compressing them)
+# But explicitly ignore the raw, uncompressed files in the root folder:
+/oracle_red_bull_f1_car_rb19_2023.glb
+/scuderia_ferrari_f1_sf23_2023.glb
+/scuderia_ferrari_f1_sf23_2023/
 # Ignore env files
 .env
 .env.local
