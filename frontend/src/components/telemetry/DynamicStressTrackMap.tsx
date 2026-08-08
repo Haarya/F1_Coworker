@@ -1,5 +1,6 @@
 import { scaleLinear } from '@visx/scale';
 import { LinePath } from '@visx/shape';
+import { curveCatmullRomClosed } from '@visx/curve';
 import { ParentSize } from '@visx/responsive';
 import { useRaceSession } from '../../context/RaceSessionContext';
 
@@ -15,13 +16,8 @@ export default function DynamicStressTrackMap() {
   const currentPos = circuit[Math.min(currentIndex, circuit.length - 1)];
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-bg-dark border-l border-border relative overflow-hidden">
+    <div className="w-full h-full flex flex-col items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-bg-dark to-bg-dark opacity-50"></div>
-      
-      <div className="text-xs text-text-secondary mb-2 uppercase tracking-widest self-start w-full border-b border-border pb-2 z-10">
-        Track Stress Map
-      </div>
-      
       <div className="flex-1 w-full relative z-10">
         {circuit.length > 0 && (
           <ParentSize>
@@ -44,7 +40,7 @@ export default function DynamicStressTrackMap() {
                 <svg width={width} height={height}>
                   <defs>
                     <filter id="track-glow" x="-20%" y="-20%" width="140%" height="140%">
-                      <feGaussianBlur stdDeviation="4" result="blur" />
+                      <feGaussianBlur stdDeviation="6" result="blur" />
                       <feComposite in="SourceGraphic" in2="blur" operator="over" />
                     </filter>
                   </defs>
@@ -55,6 +51,7 @@ export default function DynamicStressTrackMap() {
                       data={circuit}
                       x={d => xScale(d.x) ?? 0}
                       y={d => yScale(d.y) ?? 0}
+                      curve={curveCatmullRomClosed}
                       stroke="#1f2937"
                       strokeWidth={8}
                       strokeLinecap="round"
@@ -65,7 +62,7 @@ export default function DynamicStressTrackMap() {
                     {stressMap.map((d, i) => {
                       if (i === 0) return null;
                       const prev = stressMap[i - 1];
-                      const color = d.stressLevel > 70 ? '#ef4444' : d.stressLevel > 40 ? '#eab308' : '#22c55e';
+                      const color = d.stressLevel > 70 ? '#FF003C' : d.stressLevel > 40 ? '#FFEA00' : '#00E676';
                       
                       return (
                         <line

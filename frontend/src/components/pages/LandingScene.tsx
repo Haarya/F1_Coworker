@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { Suspense, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, useScroll, Environment } from '@react-three/drei';
 import * as THREE from 'three';
@@ -67,13 +67,14 @@ export default function LandingScene() {
 
   return (
     <>
-      <Environment preset="city" />
+      <Suspense fallback={null}>
+        <Environment preset="city" />
+      </Suspense>
       <ambientLight intensity={0.2} />
       
-      {/* Studio Lighting Setup */}
+      {/* Studio Lighting Setup to complement HDR */}
       <directionalLight position={[10, 5, -5]} intensity={2.0} color="#ffffff" />
       <directionalLight position={[-10, 5, 5]} intensity={1.5} color="#e31d2b" />
-      <spotLight position={[0, 10, 0]} intensity={2} angle={0.5} penumbra={1} />
       
       {/* Pulsing red cognitive load light in the cockpit */}
       <pointLight ref={cockpitLight} position={[0, 0.8, 0]} color="#ff0000" distance={3} decay={2} />

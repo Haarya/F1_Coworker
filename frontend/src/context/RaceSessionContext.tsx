@@ -19,6 +19,9 @@ interface RaceSessionState {
   currentCLIndex: number;
   currentGLat: number;
   currentSPsych: number;
+  currentSpeed: number;
+  currentThrottle: number;
+  currentBrake: number;
   playbackState: 'idle' | 'playing' | 'paused';
   playbackSpeed: 1 | 2 | 4;
   playbackTimestamp: number;
@@ -53,6 +56,9 @@ const initialState: RaceSessionState = {
   currentCLIndex: 0,
   currentGLat: 0,
   currentSPsych: 0,
+  currentSpeed: 0,
+  currentThrottle: 0,
+  currentBrake: 0,
   playbackState: 'idle',
   playbackSpeed: 1,
   playbackTimestamp: 0,
@@ -117,6 +123,9 @@ function reducer(state: RaceSessionState, action: RaceSessionAction): RaceSessio
         playbackTimestamp: newTimestamp,
         activeEventId: activeRadio && (newTimestamp - activeRadio.timestamp) < 5 ? activeRadio.id : null,
         currentCLIndex: clIndex,
+        currentSpeed: activeTelemetry ? activeTelemetry.speed : state.currentSpeed,
+        currentThrottle: activeTelemetry ? activeTelemetry.throttle : state.currentThrottle,
+        currentBrake: activeTelemetry ? (activeTelemetry.brake ? 100 : 0) : state.currentBrake,
         interceptActive
       };
     }

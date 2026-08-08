@@ -77,19 +77,43 @@ export const MOCK_RADIO_EVENTS: RadioEvent[] = [
   }
 ];
 
-// Generate a simple circular/oval circuit path for Visx
-export const MOCK_CIRCUIT: CircuitCoordinate[] = Array.from({ length: 100 }).map((_, i) => {
-  const t = (i / 100) * 2 * Math.PI;
-  // A peanut/oval shape
-  const x = 500 * Math.cos(t);
-  const y = 300 * Math.sin(t * 2);
-  return {
-    x,
-    y,
-    sector: (i < 33 ? 1 : i < 66 ? 2 : 3) as 1 | 2 | 3,
-    isHeavyBraking: (i > 25 && i < 30) || (i > 75 && i < 80)
-  };
-});
+// Generate a layout representing Monza Circuit
+// Scaled roughly to fit a bounding box
+const MONZA_BASE_POINTS = [
+  { x: 300, y: 550, sector: 1 as const, brake: false }, // Start/Finish
+  { x: 450, y: 550, sector: 1 as const, brake: true },  // Turn 1/2 Chicane
+  { x: 500, y: 480, sector: 1 as const, brake: false }, // Curva Grande
+  { x: 600, y: 350, sector: 1 as const, brake: true },  // Della Roggia Chicane
+  { x: 550, y: 250, sector: 2 as const, brake: false }, // Lesmo 1
+  { x: 500, y: 200, sector: 2 as const, brake: false }, // Lesmo 2
+  { x: 400, y: 150, sector: 2 as const, brake: false }, // Serraglio
+  { x: 300, y: 100, sector: 2 as const, brake: true },  // Ascari
+  { x: 200, y: 120, sector: 2 as const, brake: false }, // Exit Ascari
+  { x: 100, y: 300, sector: 3 as const, brake: false }, // Straight to Parabolica
+  { x: 120, y: 480, sector: 3 as const, brake: true },  // Parabolica Entry
+  { x: 200, y: 550, sector: 3 as const, brake: false }  // Parabolica Exit
+];
+
+// Interpolate the base points to create ~100 points for the track map
+export const MOCK_CIRCUIT: CircuitCoordinate[] = [];
+const TOTAL_TRACK_POINTS = 100;
+for (let i = 0; i < TOTAL_TRACK_POINTS; i++) {
+  const percent = i / TOTAL_TRACK_POINTS;
+  const indexFloat = percent * MONZA_BASE_POINTS.length;
+  const index1 = Math.floor(indexFloat);
+  const index2 = (index1 + 1) % MONZA_BASE_POINTS.length;
+  const t = indexFloat - index1;
+  
+  const p1 = MONZA_BASE_POINTS[index1];
+  const p2 = MONZA_BASE_POINTS[index2];
+  
+  MOCK_CIRCUIT.push({
+    x: p1.x + (p2.x - p1.x) * t,
+    y: p1.y + (p2.y - p1.y) * t,
+    sector: p1.sector,
+    isHeavyBraking: p1.brake || p2.brake
+  });
+}
 
 // Generate stress map points along the circuit
 export const MOCK_STRESS_MAP: StressMapPoint[] = MOCK_CIRCUIT.map((c) => {
