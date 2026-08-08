@@ -1,0 +1,20 @@
+# 3D models
+*.glb binary
+*.gltf text
+
+# Images
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.svg text
+
+# Audio/Video
+*.mp3 binary
+*.mp4 binary
+*.webm binary
+
+# Other binary files
+*.pdf binary
+*.zip binary

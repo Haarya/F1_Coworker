@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./dashboard.css";
 
 @theme {
   --color-bg-dark: #080808;
@@ -19,8 +20,9 @@
 
 body {
   margin: 0;
-  padding: 0;
-  background-color: var(--color-bg-dark);
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #080808;
 }
 
 /* Custom Scrollbar for dashboard feel */
@@ -40,4 +42,14 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #555; 
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@utility glass-panel {
+  @apply bg-black/40 backdrop-blur-md border border-white/10 rounded-xl shadow-[0_4px_30px_rgba(0,0,0,0.5)];
 }

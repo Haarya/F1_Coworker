@@ -1,0 +1,49 @@
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 300px 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 16px;
+  height: calc(100vh - 64px - 48px);
+}
+
+.grid-card {
+  @apply bg-bg-card rounded-lg border border-border flex flex-col overflow-hidden;
+}
+
+.panel-header {
+  @apply p-4 border-b border-border flex items-center gap-2;
+}
+
+.panel-title {
+  @apply font-semibold text-sm uppercase tracking-wider text-text-secondary;
+}
+
+.radio-panel    { grid-column: 1; grid-row: 1 / 3; }
+.stress-gauge   { grid-column: 2; grid-row: 1; }
+.transcript     { grid-column: 2; grid-row: 2; }
+.telemetry      { grid-column: 3; grid-row: 1; }
+.car-prediction { grid-column: 3; grid-row: 2; }
+
+@media (max-width: 1279px) {
+  .dashboard-grid {
+    grid-template-columns: 280px 1fr;
+    grid-template-rows: repeat(3, 1fr);
+  }
+  .radio-panel    { grid-column: 1; grid-row: 1 / 4; }
+  .stress-gauge   { grid-column: 2; grid-row: 1; }
+  .transcript     { grid-column: 2; grid-row: 2; }
+  .telemetry      { grid-column: 2; grid-row: 3; }
+}
+
+@media (max-width: 767px) {
+  .dashboard-grid {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+  }
+  .radio-panel { height: 300px; }
+  .stress-gauge { height: 300px; }
+  .transcript { height: 250px; }
+  .telemetry { height: 300px; }
+  .car-prediction { height: 250px; }
+}
