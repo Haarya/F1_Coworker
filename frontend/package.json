@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@gsap/react": "^2.1.2",
     "@react-three/drei": "^10.7.8",
     "@react-three/fiber": "^9.7.0",
     "@react-three/postprocessing": "^3.0.4",
@@ -22,6 +23,7 @@
     "@visx/tooltip": "^4.0.0",
     "chart.js": "^4.5.1",
     "chartjs-plugin-annotation": "^3.1.0",
+    "clsx": "^2.1.1",
     "framer-motion": "^13.0.0",
     "gsap": "^3.15.0",
     "lucide-react": "^1.30.0",
@@ -29,6 +31,7 @@
     "react-chartjs-2": "^5.3.1",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.2",
+    "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.3",
     "three": "^0.185.1"
   },
