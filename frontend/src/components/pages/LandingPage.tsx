@@ -1,18 +1,12 @@
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { ScrollControls, Scroll, useProgress, Html } from '@react-three/drei';
 import { Activity } from 'lucide-react';
 import LandingScene from './LandingScene';
 
 // Custom Loader component
-function Loader({ onFinished }: { onFinished: () => void }) {
+function Loader() {
   const { progress } = useProgress();
-  
-  useEffect(() => {
-    if (progress === 100) {
-      setTimeout(onFinished, 1000); // 1s delay to let everything settle
-    }
-  }, [progress, onFinished]);
 
   return (
     <Html center>
@@ -32,14 +26,12 @@ function Loader({ onFinished }: { onFinished: () => void }) {
 }
 
 export default function LandingPage() {
-  const [loading, setLoading] = useState(true);
-
   return (
     <div className="h-screen w-full bg-[#080808] font-sans selection:bg-[#E31D2B] selection:text-white overflow-hidden relative">
       
       {/* 3D Canvas */}
       <Canvas camera={{ position: [0, 0.5, 3.5], fov: 45 }}>
-        <Suspense fallback={<Loader onFinished={() => setLoading(false)} />}>
+        <Suspense fallback={<Loader />}>
           <ScrollControls pages={4} damping={0.2}>
             <LandingScene />
 
@@ -102,10 +94,6 @@ export default function LandingPage() {
         </Suspense>
       </Canvas>
 
-      {/* Persistent Initial Black Screen while Loading */}
-      {loading && (
-        <div className="absolute inset-0 bg-[#080808] z-40 pointer-events-none transition-opacity duration-1000" />
-      )}
     </div>
   );
 }

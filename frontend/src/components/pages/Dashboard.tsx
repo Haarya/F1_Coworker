@@ -1,6 +1,7 @@
 import LiveTerminal from '../transcript/LiveTerminal';
 import LapPenaltyCard from '../prediction/LapPenaltyCard';
-import CognitiveLoadTachometer from '../stress/CognitiveLoadTachometer';
+import { DriverStressMeter } from '../stress/DriverStressMeter';
+import DriverEmotion from '../stress/DriverEmotion';
 import { usePlayback } from '../../hooks/usePlayback';
 import { useClipSync } from '../../hooks/useClipSync';
 import ActiveInterceptOverlay from '../stress/ActiveInterceptOverlay';
@@ -31,10 +32,10 @@ export default function Dashboard() {
       <div className="flex-1 flex flex-col p-4 pl-0 relative min-h-0 overflow-hidden">
         
         {/* Dashboard Grid - 3 Columns */}
-        <div className="w-full flex-1 flex gap-4 pointer-events-auto min-h-0">
+        <div className="flex-1 flex gap-4 min-h-0 relative z-10 w-full max-w-[1920px] mx-auto p-4 pt-0">
           
           {/* Left Column (Team Radio & Predictive Penalty) */}
-          <div className="w-[30%] flex flex-col gap-4 min-h-0 h-full">
+          <div className="w-[22%] flex flex-col gap-4 min-h-0 h-full">
             <div className="flex-1 min-h-0 bg-[#0d0d0d] rounded-2xl overflow-hidden border border-[#E60012]/30 relative shadow-[0_0_15px_rgba(0,0,0,0.8)] hover:shadow-[0_0_20px_rgba(230,0,18,0.15)] transition-all duration-300">
               <h2 className="absolute top-4 left-5 z-10 text-[10px] font-bold uppercase tracking-widest text-[#E60012]/70 flex items-center gap-2 drop-shadow-[0_0_8px_rgba(230,0,18,0.5)]">
                  <span className="text-[#E60012] text-xs animate-pulse">((•))</span> Team Radio
@@ -54,7 +55,7 @@ export default function Dashboard() {
             
             {/* Stress Level */}
             <div className="flex-[2] bg-[#0d0d0d] rounded-2xl border border-[#E60012]/30 flex flex-col relative min-h-0 overflow-hidden shadow-[0_0_15px_rgba(0,0,0,0.8)] hover:shadow-[0_0_25px_rgba(230,0,18,0.15)] transition-all duration-300">
-              <CognitiveLoadTachometer />
+              <DriverStressMeter stressScore={state.currentCLIndex || 0} />
             </div>
             
             {/* Track Map */}
@@ -106,36 +107,10 @@ export default function Dashboard() {
           </div>
           
           {/* Right Column (Emotion & Driver Portrait) */}
-          <div className="w-[25%] flex flex-col gap-4 min-h-0 h-full">
+          <div className="w-[30%] flex flex-col gap-4 min-h-0 h-full">
             
             {/* Emotion Card */}
-            <div className="flex-shrink-0 h-[160px] bg-[#0d0d0d] rounded-2xl border border-[#E60012]/30 p-3 flex flex-col shadow-[0_0_15px_rgba(0,0,0,0.8)] hover:shadow-[0_0_20px_rgba(230,0,18,0.15)] transition-all duration-300 overflow-hidden">
-              <h2 className="text-[9px] font-bold uppercase tracking-widest text-[#E60012]/70 mb-2 drop-shadow-[0_0_8px_rgba(230,0,18,0.5)]">Emotion of the Driver</h2>
-              
-              <div className="flex items-end gap-2 mb-2">
-                <span className="text-white font-black text-base tracking-tighter italic drop-shadow-[0_0_10px_rgba(255,255,255,0.3)] leading-none">LOCKED IN</span>
-                <span className="text-[6px] text-[#E60012]/60 tracking-widest font-mono leading-none">CONF. 91%</span>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                 {[
-                   { name: 'Focus', val: 82, color: 'bg-[#E60012] shadow-[0_0_10px_#E60012]' },
-                   { name: 'Aggression', val: 64, color: 'bg-[#E60012] shadow-[0_0_10px_#E60012]' },
-                   { name: 'Frustration', val: 38, color: 'bg-[#E60012] shadow-[0_0_10px_#E60012]' },
-                   { name: 'Calm', val: 21, color: 'bg-[#E60012] shadow-[0_0_10px_#E60012]' }
-                 ].map((stat) => (
-                   <div key={stat.name} className="w-full group/stat">
-                     <div className="flex justify-between items-center mb-0.5">
-                        <span className="text-[6px] text-white/50 uppercase tracking-widest group-hover/stat:text-white/80 transition-colors">{stat.name}</span>
-                        <span className="text-[7px] text-[#E60012] font-bold font-mono">{stat.val}%</span>
-                     </div>
-                     <div className="w-full h-0.5 bg-[#1a1a1a] rounded-full overflow-hidden border border-white/5">
-                        <div className={`h-full ${stat.color} rounded-full transition-all duration-1000 opacity-80`} style={{ width: `${stat.val}%` }}></div>
-                     </div>
-                   </div>
-                 ))}
-              </div>
-            </div>
+            <DriverEmotion />
             
             {/* Driver Portrait Card */}
             <div className="flex-1 rounded-2xl border-2 flex flex-col relative overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.8)] transition-all duration-500"
@@ -148,7 +123,7 @@ export default function Dashboard() {
                {state.selectedDriver ? (
                   <>
                      <div className="absolute inset-0 z-0 opacity-20" style={{ background: `linear-gradient(to top, ${state.driverGlowHex} 0%, transparent 100%)` }}></div>
-                     <img src={state.selectedDriver} alt="Driver" className="w-full h-full object-cover relative z-10 transition-transform duration-700 hover:scale-105 origin-bottom" />
+                     <img src={state.selectedDriver} alt="Driver" className="w-full h-full object-cover object-[center_top] relative z-10 transition-transform duration-700 hover:scale-105 origin-bottom" />
                   </>
                ) : (
                   <div className="absolute inset-0 flex items-center justify-center border-2 border-dashed border-white/10 m-4 rounded-xl bg-white/5">
