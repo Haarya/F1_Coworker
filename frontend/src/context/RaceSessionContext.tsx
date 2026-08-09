@@ -30,6 +30,13 @@ interface RaceSessionState {
   isLoading: boolean;
   isAnalyzing: boolean;
   error: string | null;
+
+  // New Selection State
+  selectedDriver: string | null;
+  driverGlowHex: string | null;
+  selectedCircuit: string | null;
+  selectedYear: number | null;
+  selectedSession: string | null;
 }
 
 type RaceSessionAction =
@@ -38,7 +45,11 @@ type RaceSessionAction =
   | { type: 'SET_LAP'; payload: number }
   | { type: 'TOGGLE_PLAYBACK' }
   | { type: 'SET_SPEED'; payload: 1 | 2 | 4 }
-  | { type: 'TICK_PLAYBACK'; payload: number };
+  | { type: 'TICK_PLAYBACK'; payload: number }
+  | { type: 'SET_SELECTED_DRIVER'; payload: { path: string, hex: string } }
+  | { type: 'SET_SELECTED_CIRCUIT'; payload: string }
+  | { type: 'SET_SELECTED_YEAR'; payload: number }
+  | { type: 'SET_SELECTED_SESSION'; payload: string };
 
 const initialState: RaceSessionState = {
   driverId: 'VER',
@@ -67,6 +78,13 @@ const initialState: RaceSessionState = {
   isLoading: false,
   isAnalyzing: false,
   error: null,
+
+  // Default values so frames are filled initially
+  selectedDriver: '/Images/F1_Racers/Charles_Leclerc_E60012.png',
+  driverGlowHex: '#E60012',
+  selectedCircuit: '/Images/F1_circuit/Monaco_Circuit.avif',
+  selectedYear: 2024,
+  selectedSession: 'Main Race',
 };
 
 const RaceSessionContext = createContext<{
@@ -79,6 +97,10 @@ function reducer(state: RaceSessionState, action: RaceSessionAction): RaceSessio
     case 'SET_DRIVER': return { ...state, driverId: action.payload };
     case 'SET_GP': return { ...state, gpName: action.payload };
     case 'SET_LAP': return { ...state, currentLap: action.payload };
+    case 'SET_SELECTED_DRIVER': return { ...state, selectedDriver: action.payload.path, driverGlowHex: action.payload.hex };
+    case 'SET_SELECTED_CIRCUIT': return { ...state, selectedCircuit: action.payload };
+    case 'SET_SELECTED_YEAR': return { ...state, selectedYear: action.payload };
+    case 'SET_SELECTED_SESSION': return { ...state, selectedSession: action.payload };
     case 'TOGGLE_PLAYBACK': 
       return { 
         ...state, 
@@ -88,23 +110,16 @@ function reducer(state: RaceSessionState, action: RaceSessionAction): RaceSessio
       return { ...state, playbackSpeed: action.payload };
     case 'TICK_PLAYBACK': {
       const newTimestamp = state.playbackTimestamp + action.payload;
-      
-      // Calculate current CL Index based on the active telemetry point
       const activeTelemetry = state.telemetryStream.findLast(t => t.sessionTime <= newTimestamp);
-      // Determine active radio event
       const activeRadio = state.radioEvents.findLast(r => r.timestamp <= newTimestamp);
       
-      // If we're playing a radio event, bump up the stress
       let clIndex = state.currentCLIndex;
       if (activeRadio && (newTimestamp - activeRadio.timestamp) < 5) {
         clIndex = activeRadio.cognitiveLoad;
       } else if (activeTelemetry) {
-        // Base CL on speed + some noise
         clIndex = Math.min(100, Math.max(0, (activeTelemetry.speed / 350) * 80 + Math.random() * 20));
       }
 
-      // Determine if active intercept should fire (CL > 80 and heavy braking/sharp corner)
-      // We can use the circuit data mapped to the current index
       const lapDuration = 100;
       const progress = (newTimestamp % lapDuration) / lapDuration;
       const circuitIndex = Math.floor(progress * state.circuitPath.length);
@@ -114,7 +129,6 @@ function reducer(state: RaceSessionState, action: RaceSessionAction): RaceSessio
       if (clIndex > 80 && currentPos?.isHeavyBraking) {
         interceptActive = true;
       } else {
-        // Just for demo, we let GSAP dismiss it, or we turn it off if cl drops
         if (clIndex < 70) interceptActive = false;
       }
 
