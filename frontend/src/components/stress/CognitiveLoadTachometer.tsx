@@ -23,10 +23,10 @@ export default function CognitiveLoadTachometer() {
       </div>
 
       {/* Main Meter Area */}
-      <div className="w-full h-full relative flex items-center justify-center max-w-[900px] mt-8">
+      <div className="w-full h-full relative flex items-center justify-center max-w-[900px] -translate-y-12">
         
         {/* LEFT SECTION */}
-        <div className="absolute left-0 top-0 bottom-0 w-[45%] flex flex-col items-end pr-10 z-10">
+        <div className="absolute left-0 top-0 bottom-0 w-[45%] flex flex-col justify-center items-end pr-10 z-10">
           <div className="flex flex-col items-end w-full max-w-[280px]">
             <span className="text-white/50 tracking-widest text-[9px] uppercase font-bold mb-1">Driver Stress Level</span>
             <span className="text-white/30 font-mono text-[8px] mb-2">100</span>
@@ -91,15 +91,15 @@ export default function CognitiveLoadTachometer() {
 
         {/* CENTER SECTION - F1 CAR */}
         <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-          <div className="relative w-[320px] h-[400px] flex items-center justify-center">
+          <div className="relative w-[320px] h-[280px] flex items-center justify-center -translate-y-[80px]">
             
             {/* Subtle red floor highlight under car */}
-            <div className="absolute top-[50%] w-[200px] h-[80px] bg-[#E60012]/10 blur-[30px] rounded-full"></div>
+            <div className="absolute top-[65%] w-[180px] h-[50px] bg-[#E60012]/30 blur-[25px] rounded-full"></div>
             
             <img 
               src="/Images/F1_car/car for meter.png" 
               alt="F1 Car Telemetry" 
-              className="w-[80%] h-auto object-contain filter contrast-125 brightness-110 saturate-125 z-10"
+              className="w-auto h-[90%] max-w-full object-contain filter contrast-125 brightness-110 saturate-125 z-10 drop-shadow-[0_15px_15px_rgba(0,0,0,0.8)]"
               style={{ mixBlendMode: 'normal' }} // Since it's a PNG it probably has a transparent background
             />
           </div>
@@ -107,7 +107,7 @@ export default function CognitiveLoadTachometer() {
 
 
         {/* RIGHT SECTION */}
-        <div className="absolute right-0 top-0 bottom-0 w-[45%] flex flex-col items-start pl-10 z-10">
+        <div className="absolute right-0 top-0 bottom-0 w-[45%] flex flex-col justify-center items-start pl-10 z-10">
           <div className="flex flex-col items-start w-full max-w-[280px]">
              <div className="flex items-center gap-2 mb-1">
                <div className="w-1.5 h-1.5 bg-[#E60012] rounded-full animate-pulse shadow-[0_0_8px_#E60012]"></div>
