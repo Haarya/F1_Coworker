@@ -9,3 +9,5 @@ fastf1
 pandas
 numpy
 scikit-learn
+whisperx
+pytest
