@@ -18,15 +18,15 @@ export default function CognitiveLoadTachometer() {
 
       {/* Top Header - F1 Telemetry */}
       <div className="absolute top-6 left-0 w-full flex flex-col items-center z-20">
-         <span className="text-[#E60012]/40 tracking-widest text-[10px] font-bold">F1</span>
-         <span className="text-[#E60012]/30 tracking-[0.3em] text-[8px] uppercase">Telemetry</span>
+         <span className="text-[var(--theme-40)] tracking-widest text-[10px] font-bold">F1</span>
+         <span className="text-[var(--theme-30)] tracking-[0.3em] text-[8px] uppercase">Telemetry</span>
       </div>
 
       {/* Main Meter Area */}
-      <div className="w-full h-full relative flex items-center justify-center max-w-[900px] mt-8">
+      <div className="w-full h-full relative flex items-center justify-center max-w-[900px] -translate-y-12">
         
         {/* LEFT SECTION */}
-        <div className="absolute left-0 top-0 bottom-0 w-[45%] flex flex-col items-end pr-10 z-10">
+        <div className="absolute left-0 top-0 bottom-0 w-[45%] flex flex-col justify-center items-end pr-10 z-10">
           <div className="flex flex-col items-end w-full max-w-[280px]">
             <span className="text-white/50 tracking-widest text-[9px] uppercase font-bold mb-1">Driver Stress Level</span>
             <span className="text-white/30 font-mono text-[8px] mb-2">100</span>
@@ -34,10 +34,10 @@ export default function CognitiveLoadTachometer() {
             <div className="relative w-full h-[280px] flex items-center">
                {/* Big Number */}
                <div className="absolute left-[-20px] flex flex-col items-center">
-                 <span className="text-white font-black text-7xl tracking-tighter drop-shadow-[0_0_15px_rgba(255,0,0,0.4)]">
+                 <span className="text-white font-black text-7xl tracking-tighter drop-shadow-[0_0_15px_var(--theme-40)]">
                    {leftStress}
                  </span>
-                 <span className="text-[7px] text-[#E60012]/60 uppercase tracking-widest mt-1">Cognitive</span>
+                 <span className="text-[var(--theme-60)] text-[7px] uppercase tracking-widest mt-1">Cognitive</span>
                </div>
                
                {/* Left Dial SVG */}
@@ -50,9 +50,9 @@ export default function CognitiveLoadTachometer() {
                       </linearGradient>
                       
                       <linearGradient id="leftFill" x1="0" y1="1" x2="1" y2="0">
-                        <stop offset="0%" stopColor="#8c1c1c" />
-                        <stop offset="50%" stopColor="#e63946" />
-                        <stop offset="100%" stopColor="#ffb3b3" />
+                        <stop offset="0%" stopColor="var(--theme-30)" />
+                        <stop offset="50%" stopColor="var(--theme-base)" />
+                        <stop offset="100%" stopColor="var(--theme-50)" />
                       </linearGradient>
                       
                       <clipPath id="leftBracketClip">
@@ -60,7 +60,7 @@ export default function CognitiveLoadTachometer() {
                       </clipPath>
                     </defs>
 
-                    <polygon points="0,0 40,0 120,140 40,280 0,280 80,140" fill="url(#leftBase)" stroke="rgba(230,0,18,0.2)" strokeWidth="1"/>
+                    <polygon points="0,0 40,0 120,140 40,280 0,280 80,140" fill="url(#leftBase)" stroke="var(--theme-20)" strokeWidth="1"/>
                     <polygon points="35,5 115,140 35,275 5,275 80,140 5,5" fill="none" stroke="rgba(0,0,0,0.8)" strokeWidth="4" />
 
                     <g clipPath="url(#leftBracketClip)">
@@ -91,15 +91,15 @@ export default function CognitiveLoadTachometer() {
 
         {/* CENTER SECTION - F1 CAR */}
         <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-          <div className="relative w-[320px] h-[400px] flex items-center justify-center">
+          <div className="relative w-[320px] h-[280px] flex items-center justify-center -translate-y-[80px]">
             
             {/* Subtle red floor highlight under car */}
-            <div className="absolute top-[50%] w-[200px] h-[80px] bg-[#E60012]/10 blur-[30px] rounded-full"></div>
+            <div className="absolute top-[65%] w-[180px] h-[50px] bg-[var(--theme-30)] blur-[25px] rounded-full"></div>
             
             <img 
               src="/Images/F1_car/car for meter.png" 
               alt="F1 Car Telemetry" 
-              className="w-[80%] h-auto object-contain filter contrast-125 brightness-110 saturate-125 z-10"
+              className="w-auto h-[90%] max-w-full object-contain filter contrast-125 brightness-110 saturate-125 z-10 drop-shadow-[0_15px_15px_rgba(0,0,0,0.8)]"
               style={{ mixBlendMode: 'normal' }} // Since it's a PNG it probably has a transparent background
             />
           </div>
@@ -107,11 +107,11 @@ export default function CognitiveLoadTachometer() {
 
 
         {/* RIGHT SECTION */}
-        <div className="absolute right-0 top-0 bottom-0 w-[45%] flex flex-col items-start pl-10 z-10">
+        <div className="absolute right-0 top-0 bottom-0 w-[45%] flex flex-col justify-center items-start pl-10 z-10">
           <div className="flex flex-col items-start w-full max-w-[280px]">
              <div className="flex items-center gap-2 mb-1">
-               <div className="w-1.5 h-1.5 bg-[#E60012] rounded-full animate-pulse shadow-[0_0_8px_#E60012]"></div>
-               <span className="text-[#E60012]/80 tracking-widest text-[9px] uppercase font-bold">Live Telemetry</span>
+               <div className="w-1.5 h-1.5 bg-[var(--theme-base)] rounded-full animate-pulse shadow-[0_0_8px_var(--theme-base)]"></div>
+               <span className="text-[var(--theme-80)] tracking-widest text-[9px] uppercase font-bold">Live Telemetry</span>
              </div>
             <span className="text-white/30 font-mono text-[8px] mb-2 ml-[120px]">100</span>
             
@@ -125,9 +125,9 @@ export default function CognitiveLoadTachometer() {
                       </linearGradient>
                       
                       <linearGradient id="rightFill" x1="1" y1="1" x2="0" y2="0">
-                         <stop offset="0%" stopColor="#8c1c1c" />
-                         <stop offset="50%" stopColor="#e63946" />
-                         <stop offset="100%" stopColor="#ffb3b3" />
+                         <stop offset="0%" stopColor="var(--theme-30)" />
+                         <stop offset="50%" stopColor="var(--theme-base)" />
+                         <stop offset="100%" stopColor="var(--theme-50)" />
                       </linearGradient>
                       
                       <clipPath id="rightBracketClip">
@@ -135,7 +135,7 @@ export default function CognitiveLoadTachometer() {
                       </clipPath>
                     </defs>
 
-                    <polygon points="120,0 80,0 0,140 80,280 120,280 40,140" fill="url(#rightBase)" stroke="rgba(230,0,18,0.2)" strokeWidth="1"/>
+                    <polygon points="120,0 80,0 0,140 80,280 120,280 40,140" fill="url(#rightBase)" stroke="var(--theme-20)" strokeWidth="1"/>
                     <polygon points="85,5 5,140 85,275 115,275 40,140 115,5" fill="none" stroke="rgba(0,0,0,0.8)" strokeWidth="4" />
 
                     <g clipPath="url(#rightBracketClip)">
@@ -160,10 +160,10 @@ export default function CognitiveLoadTachometer() {
                </div>
                
                <div className="absolute right-[-20px] flex flex-col items-center">
-                 <span className="text-white font-black text-7xl tracking-tighter drop-shadow-[0_0_15px_rgba(255,0,0,0.4)]">
+                 <span className="text-white font-black text-7xl tracking-tighter drop-shadow-[0_0_15px_var(--theme-40)]">
                    {rightStress}
                  </span>
-                 <span className="text-[7px] text-[#E60012]/60 uppercase tracking-widest mt-1">Physical</span>
+                 <span className="text-[var(--theme-60)] text-[7px] uppercase tracking-widest mt-1">Physical</span>
                </div>
             </div>
             
