@@ -1,4 +1,4 @@
-import type { RadioEvent, TelemetryPoint, CorrelationSeries } from '../types';
+import type { RadioEvent, CorrelationSeries } from '../types';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
@@ -6,9 +6,6 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
  * Standard fetch wrapper that handles errors and JSON parsing.
  */
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  // In this phase, the backend is not yet fully running, so we wrap calls
-  // but they will likely fail if no backend is on port 8000. 
-  // We log the attempt.
   console.log(`[API Client] Fetching ${API_BASE}${endpoint}`);
   
   try {
@@ -27,22 +24,38 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
     return await res.json();
   } catch (error) {
     console.warn(`[API Client] Error calling ${endpoint}:`, error);
-    // Rethrow to let components handle loading states/errors
     throw error;
   }
 }
 
 export const ApiClient = {
-  // Radio
+  // Radio (Existing functionality, leaving intact for UI)
   getRadioEvents: (driverId: string, gp: string) => 
     fetchApi<RadioEvent[]>(`/radio/events?driver_id=${driverId}&gp=${gp}`),
     
   getRadioTranscript: (eventId: string) => 
     fetchApi<{ transcript: string; confidence: number; cognitiveLoad: number }>(`/radio/transcript/${eventId}`),
 
-  // Telemetry
-  getTelemetryStream: (driver: string, session: string, lap: number) => 
-    fetchApi<TelemetryPoint[]>(`/telemetry/stream?driver=${driver}&session=${session}&lap=${lap}`),
+  getDriverStress: (audioId: string = "sample_radio") => 
+    fetchApi<any>(`/radio/stress?audioId=${audioId}`),
+
+  // Telemetry (Updated)
+  getTelemetryLaps: (year: number, gp: string, driver: string) => 
+    fetchApi<any[]>(`/telemetry/laps?year=${year}&gp=${gp}&driver=${driver}`),
+
+  getTelemetryStream: (year: number, gp: string, driver: string, session: string = 'Race') => 
+    fetchApi<any>(`/telemetry/stream?year=${year}&gp=${gp}&driver=${driver}&session=${session}`),
+
+  // Prediction (Updated)
+  postLapPenalty: (data: any) => 
+    fetchApi<any>(`/prediction/lap-penalty`, { method: 'POST', body: JSON.stringify(data) }),
+
+  postIntercept: (data: any) => 
+    fetchApi<any>(`/prediction/intercept`, { method: 'POST', body: JSON.stringify(data) }),
+
+  // Circuit (Updated)
+  getCircuitMap: (year: number, gp: string) => 
+    fetchApi<any>(`/circuit/map?year=${year}&gp=${gp}`),
 
   // Analysis
   getCorrelation: (driver: string, gp: string, lap: number) => 

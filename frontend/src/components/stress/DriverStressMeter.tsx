@@ -2,6 +2,8 @@ import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF, PresentationControls, Environment, ContactShadows } from '@react-three/drei';
+import { useRaceSession } from '../../context/RaceSessionContext';
+import { useTelemetryStream } from '../../hooks/useApi';
 
 interface DriverStressMeterProps {
   stressScore: number;
@@ -101,15 +103,24 @@ const ChevronGauge = ({ side, score }: { side: 'left' | 'right', score: number }
 };
 
 export const DriverStressMeter: React.FC<DriverStressMeterProps> = ({ stressScore }) => {
-  const [fakeScore, setFakeScore] = React.useState(stressScore || 0);
+  const { state } = useRaceSession();
+  const getCircuitName = (path: string) => {
+    const filename = path.split('/').pop() || '';
+    return filename.replace('_Circuit.avif', '').replace(/_/g, ' ').toUpperCase();
+  };
+  const gpName = state.selectedCircuit ? getCircuitName(state.selectedCircuit) : '';
 
-  React.useEffect(() => {
-    // Generate a random stress score between 10 and 95 every 2.5 seconds to test animation
-    const interval = setInterval(() => {
-       setFakeScore(Math.floor(Math.random() * 85) + 10);
-    }, 2500);
-    return () => clearInterval(interval);
-  }, []);
+  const { data: telemetryData } = useTelemetryStream(
+    state.selectedYear!,
+    gpName,
+    state.selectedDriver!,
+    state.selectedSession!
+  );
+
+  // Default to 0 or use the backend score. The backend stream response
+  // might be a single data point or an array, assuming it's an object with cognitive_load for now
+  // based on standard telemetry stream behavior.
+  const score = telemetryData?.cognitive_load ?? stressScore ?? 0;
 
   return (
     <div className="relative w-full h-full min-h-[450px] bg-[#090909] rounded-2xl border border-white/5 overflow-hidden shadow-[inset_0_0_40px_rgba(0,0,0,0.8)]">
@@ -138,12 +149,12 @@ export const DriverStressMeter: React.FC<DriverStressMeterProps> = ({ stressScor
           <div className="flex flex-col items-center justify-center relative z-20 bg-[#090909]/60 w-[120px] h-[120px] rounded-full backdrop-blur-sm border border-white/5">
             <motion.span 
               className="text-6xl font-black tracking-tighter text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]" 
-              key={fakeScore}
+              key={score}
               initial={{ scale: 1.1, opacity: 0.8 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 15 }}
             >
-              {Math.round(fakeScore)}
+              {Math.round(score)}
             </motion.span>
             <span className="text-[9px] text-white/40 tracking-[0.2em] mt-1 font-bold pl-[0.2em]">/ 100</span>
           </div>
@@ -151,8 +162,8 @@ export const DriverStressMeter: React.FC<DriverStressMeterProps> = ({ stressScor
 
         {/* Gauges Container */}
         <div className="absolute inset-0 flex justify-between items-center px-12 z-10 pointer-events-none mb-10">
-           <ChevronGauge side="left" score={fakeScore} />
-           <ChevronGauge side="right" score={fakeScore} />
+           <ChevronGauge side="left" score={score} />
+           <ChevronGauge side="right" score={score} />
         </div>
 
         {/* 3D Car Stage */}

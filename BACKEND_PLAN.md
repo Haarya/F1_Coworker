@@ -15,26 +15,27 @@
 │  ┌─────────┐   ┌──────────────┐   ┌───────────────────────────┐  │
 │  │ Routes   │──▶│  Services     │──▶│  Pipelines / Models       │  │
 │  │          │   │              │   │                           │  │
-│  │ radio.py │   │ radio_svc    │   │ transcription.py          │  │
-│  │ tele.py  │   │ telemetry_svc│   │   └─ Whisper Pipeline     │  │
-│  │ analysis │   │ analysis_svc │   │ stress_analysis.py        │  │
-│  │ circuit  │   │ circuit_svc  │   │   └─ Wav2Vec2 Pipeline    │  │
-│  │ predict  │   │ predict_svc  │   │ correlation.py            │  │
-│  └─────────┘   └──────────────┘   │   └─ Timestamp Alignment  │  │
-│                                    │ cognitive_gforce.py        │  │
-│  ┌─────────┐   ┌──────────────┐   │   └─ G_lat Normalization  │  │
-│  │ Schemas  │   │  Config      │   │ intercept_engine.py       │  │
-│  │ (Pydantic│   │  (.env +     │   │   └─ Rule Engine          │  │
-│  │  v2)     │   │   config.py) │   │ lap_penalty_predictor.py  │  │
-│  └─────────┘   └──────────────┘   │   └─ Random Forest        │  │
+│  │ radio.py │   │ radio_svc    │   │ audio_diarization.py      │  │
+│  │ tele.py  │   │ telemetry_svc│   │   ├─ WhisperX             │  │
+│  │ analysis │   │ analysis_svc │   │   └─ Pyannote Diarization │  │
+│  │ circuit  │   │ circuit_svc  │   │ stress_analysis.py        │  │
+│  │ predict  │   │ predict_svc  │   │   └─ Wav2Vec2 Pipeline    │  │
+│  └─────────┘   └──────────────┘   │ correlation.py            │  │
+│                                    │   └─ Timestamp Alignment  │  │
+│  ┌─────────┐   ┌──────────────┐   │ cognitive_gforce.py        │  │
+│  │ Schemas  │   │  Config      │   │   └─ G_lat Normalization  │  │
+│  │ (Pydantic│   │  (.env +     │   │ intercept_engine.py       │  │
+│  │  v2)     │   │   config.py) │   │   └─ Rule Engine          │  │
+│  └─────────┘   └──────────────┘   │ lap_penalty_predictor.py  │  │
+│                                    │   └─ Random Forest        │  │
 │                                    └───────────────────────────┘  │
 │                                                                   │
 │  ┌─────────────────────────────────────────────────────────────┐  │
 │  │                    External Data Sources                     │  │
 │  │  ┌──────────────┐  ┌───────────────┐  ┌─────────────────┐  │  │
-│  │  │ HF Datasets  │  │   FastF1      │  │  HF Transformers│  │  │
-│  │  │ MikCil/      │  │   Telemetry   │  │  Whisper +      │  │  │
-│  │  │ f1-team-radio│  │   Engine      │  │  Wav2Vec2       │  │  │
+│  │  │ HF Datasets  │  │   FastF1      │  │  HF Models      │  │  │
+│  │  │ MikCil/      │  │   Telemetry   │  │  WhisperX +     │  │  │
+│  │  │ f1-team-radio│  │   Engine      │  │  Pyannote       │  │  │
 │  │  └──────────────┘  └───────────────┘  └─────────────────┘  │  │
 │  └─────────────────────────────────────────────────────────────┘  │
 └───────────────────────────────────────────────────────────────────┘
@@ -147,82 +148,71 @@ settings = Settings()
 
 ## 4. Hugging Face AI Pipelines
 
-### 4.1 ASR — Whisper (`openai/whisper-large-v3`)
+### 4.1 Audio Diarization & ASR — WhisperX + Pyannote
 
-**Purpose**: Transcribe F1 team radio audio clips (16kHz mono WAV) into text, even under heavy engine noise and radio static.
+**Purpose**: Transcribe F1 team radio audio clips and intelligently separate the speakers (Engineer vs. Driver) using neural network diarization and heuristic keyword mapping.
 
-**Singleton Loader**:
+**Implementation**:
 ```python
-# backend/models/whisper.py
-from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
+# backend/pipelines/audio_diarization.py
+import whisperx
+from whisperx.diarize import DiarizationPipeline, assign_word_speakers
 import torch
+import librosa
 
-class WhisperModel:
-    _instance = None
-    
-    @classmethod
-    def get_instance(cls):
-        if cls._instance is None:
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-            torch_dtype = torch.float16 if device == "cuda" else torch.float32
-            
-            model = AutoModelForSpeechSeq2Seq.from_pretrained(
-                settings.whisper_model,
-                torch_dtype=torch_dtype,
-                low_cpu_mem_usage=True,
-                use_safetensors=True,
-                token=settings.hf_token
-            )
-            model.to(device)
-            
-            processor = AutoProcessor.from_pretrained(
-                settings.whisper_model,
-                token=settings.hf_token
-            )
-            
-            cls._instance = pipeline(
-                "automatic-speech-recognition",
-                model=model,
-                tokenizer=processor.tokenizer,
-                feature_extractor=processor.feature_extractor,
-                torch_dtype=torch_dtype,
-                device=device,
-                return_timestamps="word"     # word-level timestamps
-            )
-        return cls._instance
-```
+class DiarizationPipeline:
+    def __init__(self):
+        # Heuristic keywords commonly used by Engineers on the pit wall
+        self.engineer_keywords = ["box", "mode", "strat", "copy", "delta", "pit", "drinks", "water", "check"]
 
-**Transcription Pipeline**:
-```python
-# backend/pipelines/transcription.py
+    def identify_speakers(self, segments):
+        # Identify Engineer vs Driver based on keyword frequency
+        speaker_hits = {}
+        for seg in segments:
+            speaker = seg.get("speaker")
+            if not speaker: continue
+            
+            if speaker not in speaker_hits:
+                speaker_hits[speaker] = 0
+            
+            text = seg.get("text", "").lower()
+            if any(keyword in text for keyword in self.engineer_keywords):
+                speaker_hits[speaker] += 1
+                
+        engineer_speaker_id = max(speaker_hits, key=speaker_hits.get) if speaker_hits else None
+            
+        result = []
+        for seg in segments:
+            new_seg = dict(seg)
+            if "speaker" in new_seg:
+                new_seg["speaker_label"] = "Engineer" if new_seg["speaker"] == engineer_speaker_id else "Driver"
+            result.append(new_seg)
+        return result
 
-async def transcribe_audio(audio_array: np.ndarray, sampling_rate: int = 16000) -> Transcript:
-    pipe = WhisperModel.get_instance()
-    
-    result = pipe(
-        {"array": audio_array, "sampling_rate": sampling_rate},
-        generate_kwargs={"language": "english", "task": "transcribe"},
-        chunk_length_s=30,
-        batch_size=1,
-    )
-    
-    return Transcript(
-        text=result["text"].strip(),
-        confidence=1.0,  # Whisper doesn't expose per-sentence confidence natively
-        words=[
-            WordTimestamp(word=chunk["text"], start=chunk["timestamp"][0], end=chunk["timestamp"][1])
-            for chunk in result.get("chunks", [])
-            if chunk.get("timestamp") and chunk["timestamp"][0] is not None
-        ]
-    )
+    def process_audio(self, audio_path, hf_token, device="cpu", compute_type="int8"):
+        # 1. Load Audio bypassing FFmpeg (using librosa/soundfile)
+        audio, _ = librosa.load(audio_path, sr=16000, mono=True)
+        
+        # 2. Transcribe (Whisper)
+        model = whisperx.load_model("base", device, compute_type=compute_type)
+        result = model.transcribe(audio, batch_size=16)
+        
+        # 3. Align Timestamps
+        model_a, metadata = whisperx.load_align_model(language_code=result["language"], device=device)
+        result = whisperx.align(result["segments"], model_a, metadata, audio, device, return_char_alignments=False)
+        
+        # 4. Diarize (Pyannote 3.1)
+        diarize_model = DiarizationPipeline(model_name="pyannote/speaker-diarization-3.1", token=hf_token, device=device)
+        diarize_segments = diarize_model(audio)
+        
+        # 5. Merge & Map Speakers
+        final_segments = assign_word_speakers(diarize_segments, result)
+        return self.identify_speakers(final_segments["segments"])
 ```
 
 **Performance Notes**:
-- First call incurs ~15-30s model download (cached after)
-- Inference: ~2-5s per 10s clip on GPU, ~10-20s on CPU
-- The dataset provides pre-computed transcripts as a fallback baseline
-
-### 4.2 SER — Wav2Vec2 Emotion (`ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition`)
+- **Setup**: Requires Python 3.11 for official CTranslate2 and PyTorch pre-compiled wheels (bypassing Windows WDAC blocks).
+- **Execution**: WhisperX batches transcription, making it highly efficient. Pyannote downloads gating weights on first execution.### 4.2 SER — Wav2Vec2 Emotion (`ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition`)
 
 **Purpose**: Classify the emotional content of a 16kHz audio waveform into 7 emotion categories.
 

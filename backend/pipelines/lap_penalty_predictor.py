@@ -1,3 +1,5 @@
+import os
+import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler
@@ -22,6 +24,42 @@ class LapPenaltyPredictor:
         self.scaler = StandardScaler()
         self.is_trained = False
         
+    def train_on_real_data(self):
+        csv_path = os.path.join(os.path.dirname(__file__), "..", "data", "real_training_data.csv")
+        if not os.path.exists(csv_path):
+            print("Real training data not found. Falling back to mock data.")
+            self.fit_mock_data()
+            return
+
+        try:
+            df = pd.read_csv(csv_path)
+            if df.empty or len(df) < 10:
+                print("Real training data too small. Falling back to mock data.")
+                self.fit_mock_data()
+                return
+                
+            features = [
+                "cognitive_load", "s_psych", "g_lat", "speed", "throttle",
+                "brake", "emotion_angry", "emotion_fearful", "sector", "lap_progress", "jitter", "shimmer"
+            ]
+            
+            # Fill missing features with 0
+            for f in features:
+                if f not in df.columns:
+                    df[f] = 0.0
+                    
+            X = df[features].values
+            y = df["delta_seconds"].values
+            
+            X_scaled = self.scaler.fit_transform(X)
+            self.model.fit(X_scaled, y)
+            self.is_trained = True
+            print(f"Successfully trained Random Forest on {len(df)} real data samples.")
+            
+        except Exception as e:
+            print(f"Failed to train on real data: {e}. Falling back to mock data.")
+            self.fit_mock_data()
+
     def fit_mock_data(self):
         """
         Since we don't have a database of parsed radio events hooked up yet,
@@ -66,7 +104,7 @@ class LapPenaltyPredictor:
     def predict(self, features: dict) -> LapPenalty:
         """Predict sector time penalty from current stress markers."""
         if not self.is_trained:
-            self.fit_mock_data()
+            self.train_on_real_data()
         
         X = np.array([[
             features.get("cognitive_load", 0),
