@@ -13,8 +13,8 @@ export default function CircuitMapCard() {
   const currentCircuitName = state.selectedCircuit ? getCircuitName(state.selectedCircuit) : 'SELECT CIRCUIT';
 
   return (
-    <div className="flex-1 bg-[#0d0d0d] rounded-2xl border border-[#E60012]/30 flex flex-col relative min-h-0 p-3 shadow-[0_0_15px_rgba(230,0,18,0.15)] hover:shadow-[0_0_25px_rgba(230,0,18,0.3)] transition-all duration-300 overflow-hidden">
-      <h2 className="text-[8px] font-bold uppercase tracking-widest text-[#E60012] mb-3 drop-shadow-[0_0_8px_rgba(230,0,18,0.5)] absolute top-3 left-4 z-20">
+    <div className="flex-1 bg-[#0d0d0d] rounded-2xl border border-[var(--theme-30)] flex flex-col relative min-h-0 p-3 shadow-[0_0_15px_var(--theme-10)] hover:shadow-[0_0_25px_var(--theme-30)] transition-all duration-300 overflow-hidden">
+      <h2 className="text-[8px] font-bold uppercase tracking-widest text-[var(--theme-base)] mb-3 drop-shadow-[0_0_8px_var(--theme-50)] absolute top-3 left-4 z-20">
         Circuit Map • Live
       </h2>
       
@@ -25,8 +25,8 @@ export default function CircuitMapCard() {
             {state.selectedCircuit ? (
                <img src={state.selectedCircuit} alt="Circuit Map" className="w-[95%] h-full object-contain filter invert opacity-80" />
             ) : (
-               <div className="w-[80%] h-[80%] border border-dashed border-[#E60012]/20 rounded-xl flex items-center justify-center bg-[#E60012]/5">
-                  <span className="text-[#E60012]/40 text-[10px] font-mono tracking-widest uppercase">Select Circuit</span>
+               <div className="w-[80%] h-[80%] border border-dashed border-[var(--theme-20)] rounded-xl flex items-center justify-center bg-[var(--theme-10)]">
+                  <span className="text-[var(--theme-40)] text-[10px] font-mono tracking-widest uppercase">Select Circuit</span>
                </div>
             )}
          </div>
@@ -35,7 +35,7 @@ export default function CircuitMapCard() {
          <div className="flex flex-col items-center justify-end pb-1 shrink-0">
             <span className="text-[7px] uppercase tracking-[0.2em] text-white/40 font-bold mb-0.5">Grand Prix</span>
             <div className="flex items-center gap-1.5 text-white font-black text-xs tracking-wider uppercase">
-               <span className="text-[#E60012] animate-pulse">🔴</span> {currentCircuitName}
+               <div className="w-2 h-2 rounded-full bg-[var(--theme-base)] animate-pulse shadow-[0_0_8px_var(--theme-50)]"></div> {currentCircuitName}
             </div>
          </div>
 

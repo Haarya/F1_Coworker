@@ -21,11 +21,11 @@ export default function DriverAnalyticsCard() {
   }
 
   return (
-    <div className="flex-1 bg-[#0d0d0d] rounded-2xl overflow-hidden border border-[#E60012]/30 relative shadow-[0_0_15px_rgba(230,0,18,0.15)] hover:shadow-[0_0_25px_rgba(230,0,18,0.3)] transition-all duration-300 flex flex-col p-5">
+    <div className="flex-1 bg-[#0d0d0d] rounded-2xl overflow-hidden border border-[var(--theme-30)] relative shadow-[0_0_15px_var(--theme-10)] hover:shadow-[0_0_25px_var(--theme-30)] transition-all duration-300 flex flex-col p-5">
       
       {/* Header */}
       <div className="flex items-center justify-between mb-4 z-10 relative">
-         <h2 className="text-[10px] font-bold uppercase tracking-widest text-[#E60012] drop-shadow-[0_0_8px_rgba(230,0,18,0.5)]">
+         <h2 className="text-[10px] font-bold uppercase tracking-widest text-[var(--theme-base)] drop-shadow-[0_0_8px_var(--theme-50)]">
             Driver Analytics
          </h2>
          <div className="bg-black/50 border border-white/10 px-2 py-1 rounded flex items-center gap-1.5 backdrop-blur-sm shrink-0">
@@ -40,28 +40,28 @@ export default function DriverAnalyticsCard() {
          
          {/* Row 1 */}
          <div className="flex items-center gap-3">
-            <Heart className="w-5 h-5 text-[#E60012] fill-[#E60012]" strokeWidth={1.5} />
+            <Heart className="w-5 h-5 text-[var(--theme-base)] fill-[var(--theme-base)]" strokeWidth={1.5} />
             <div className="text-[11px] tracking-wide whitespace-nowrap">
                <span className="text-white/80 font-light">Primary Emotion: </span>
-               <span className="text-[#E60012] font-semibold">{emotion}</span>
+               <span className="text-[var(--theme-base)] font-semibold">{emotion}</span>
             </div>
          </div>
          
          {/* Row 2 */}
          <div className="flex items-center gap-3">
-            <Cloud className="w-4 h-4 text-[#E60012] fill-[#E60012]/20" strokeWidth={1.5} />
+            <Cloud className="w-4 h-4 text-[var(--theme-base)] fill-[var(--theme-20)]" strokeWidth={1.5} />
             <div className="text-[11px] tracking-wide whitespace-nowrap">
                <span className="text-white/80 font-light">Cognitive Load Score: </span>
-               <span className="text-[#E60012] font-semibold">{score.toFixed(1)}</span>
+               <span className="text-[var(--theme-base)] font-semibold">{score.toFixed(1)}</span>
             </div>
          </div>
          
          {/* Row 3 */}
          <div className="flex items-center gap-3">
-            <Brain className="w-4 h-4 text-[#E60012] fill-[#E60012]/20" strokeWidth={1.5} />
+            <Brain className="w-4 h-4 text-[var(--theme-base)] fill-[var(--theme-20)]" strokeWidth={1.5} />
             <div className="text-[11px] tracking-wide whitespace-nowrap">
                <span className="text-white/80 font-light">Stress Level Category: </span>
-               <span className="text-[#E60012] font-semibold">{category}</span>
+               <span className="text-[var(--theme-base)] font-semibold">{category}</span>
             </div>
          </div>
 

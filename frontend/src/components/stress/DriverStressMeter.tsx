@@ -83,10 +83,10 @@ const ChevronGauge = ({ side, score }: { side: 'left' | 'right', score: number }
               }}
               initial={false}
               animate={{
-                 backgroundColor: isActive ? '#E60012' : '#1a1a1a',
-                 boxShadow: isActive ? '0 0 15px 2px rgba(230,0,18,0.7)' : '0 0 0px rgba(0,0,0,0)',
+                 backgroundColor: isActive ? 'var(--theme-base)' : '#1a1a1a',
+                 boxShadow: isActive ? '0 0 15px 2px var(--theme-70)' : '0 0 0px rgba(0,0,0,0)',
                  opacity: isActive ? 1 : 0.4,
-                 borderColor: isActive ? '#ff4d4d' : '#333'
+                 borderColor: isActive ? 'var(--theme-base)' : '#333'
               }}
               transition={{ duration: 0.4, ease: "easeOut" }}
               className="border-b border-r"
@@ -159,7 +159,7 @@ export const DriverStressMeter: React.FC<DriverStressMeterProps> = ({ stressScor
         <div className="absolute bottom-0 w-full h-[60%] z-30">
            
            {/* Floor Glow (Red Ambient Light) */}
-           <div className="absolute bottom-[-20%] left-1/2 -translate-x-1/2 w-[80%] h-[60%] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#E60012]/30 via-[#E60012]/5 to-transparent blur-3xl pointer-events-none"></div>
+           <div className="absolute bottom-[-20%] left-1/2 -translate-x-1/2 w-[80%] h-[60%] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[var(--theme-30)] via-[var(--theme-10)] to-transparent blur-3xl pointer-events-none"></div>
            
            {/* Concentric Stage Rings */}
            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[60%] h-[40px] border border-white/10 rounded-full opacity-20 pointer-events-none" style={{ maskImage: 'linear-gradient(to bottom, transparent, black)' }}></div>
