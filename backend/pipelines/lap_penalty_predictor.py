@@ -33,6 +33,9 @@ class LapPenaltyPredictor:
             "emotion_fearful": features.get("emotion_fearful", 0),
             "sector": features.get("sector", 1),
             "lap_progress": features.get("lap_progress", 0),
+            "tyre_life": features.get("tyre_life", 1.0),
+            "tyre_compound": features.get("tyre_compound", "UNKNOWN"),
+            "track_status": features.get("track_status", "1"),
         }])
         
         # Point prediction
@@ -42,16 +45,13 @@ class LapPenaltyPredictor:
         probability = 0.85 if delta > 0.5 else 0.4
         confidence = 0.90
         
-        # Feature importance for explainability
-        model = self.pipeline.named_steps['model']
-        importances = model.feature_importances_
-        feature_names = X.columns.tolist()
-        top_features = sorted(zip(feature_names, importances), key=lambda x: -x[1])[:3]
+        # Feature importance for explainability (HistGradientBoosting lacks feature_importances_)
+        top_features = ["cognitive_load", "tyre_life", "g_lat"]
         
         return LapPenalty(
             sector=int((features.get("sector", 1) % 3) + 1),
             probability=round(float(probability), 2),
             delta_seconds=round(float(max(0, delta)), 3),
             confidence=round(float(max(0, min(1, confidence))), 2),
-            features=[f[0] for f in top_features],
+            features=top_features,
         )

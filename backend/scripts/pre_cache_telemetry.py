@@ -2,7 +2,7 @@ import os
 import sys
 import time
 import fastf1
-from datasets import load_dataset
+from datasets import load_dataset, Audio
 from dotenv import load_dotenv
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -26,6 +26,7 @@ def main():
     hf_token = os.getenv("HF_TOKEN")
     print("Loading Hugging Face Dataset...")
     dataset = load_dataset(settings.dataset_name, split="train", streaming=True, token=hf_token)
+    dataset = dataset.cast_column("audio", Audio(decode=False))
     
     unique_races = extract_unique_races(dataset)
     print(f"Found {len(unique_races)} unique races to cache.")

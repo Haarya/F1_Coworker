@@ -7,9 +7,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pandas as pd
 import numpy as np
 import joblib
-from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.compose import TransformedTargetRegressor
+from sklearn.preprocessing import StandardScaler, OrdinalEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.model_selection import GroupKFold, GridSearchCV
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.pipeline import Pipeline
 
@@ -21,37 +23,81 @@ def main():
 
     print("Loading data...")
     df = pd.read_csv(data_path)
-    features = ["cognitive_load", "s_psych", "g_lat", "speed", "throttle",
-                "brake", "emotion_angry", "emotion_fearful", "sector", "lap_progress"]
-                
-    X = df[features].fillna(0)
-    y = df["delta_seconds"]
+    
+    # We require race_id for GroupKFold
+    if "race_id" not in df.columns:
+        print("Error: Dataset is missing 'race_id' column for GroupKFold. Please regenerate training data.")
+        return
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    # Impute missing values
+    df["tyre_compound"] = df["tyre_compound"].fillna("UNKNOWN")
+    df["tyre_life"] = df["tyre_life"].fillna(1.0)
+    df["track_status"] = df["track_status"].fillna("1")
+    
+    numeric_features = ["cognitive_load", "s_psych", "g_lat", "speed", "throttle",
+                        "brake", "emotion_angry", "emotion_fearful", "sector", "lap_progress", "tyre_life"]
+    categorical_features = ["tyre_compound", "track_status"]
+    
+    # Avoid SettingWithCopyWarning
+    X = df[numeric_features + categorical_features].copy()
+    for col in numeric_features:
+        X[col] = X[col].fillna(0)
+    
+    y = df["delta_seconds"]
+    groups = df["race_id"]
+
+    # Preprocessing
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ('num', StandardScaler(), numeric_features),
+            ('cat', OrdinalEncoder(handle_unknown='use_encoded_value', unknown_value=-1), categorical_features)
+        ])
+
+    # Model
+    # HistGradientBoostingRegressor natively supports categorical features if we pass their indices.
+    cat_indices = list(range(len(numeric_features), len(numeric_features) + len(categorical_features)))
+    
+    inner_model = HistGradientBoostingRegressor(
+        categorical_features=cat_indices, 
+        random_state=42
+    )
+
+    # Wrap target with log1p
+    model = TransformedTargetRegressor(
+        regressor=inner_model,
+        func=np.log1p,
+        inverse_func=np.expm1
+    )
 
     pipeline = Pipeline([
-        ('scaler', StandardScaler()),
-        ('model', GradientBoostingRegressor(random_state=42))
+        ('preprocessor', preprocessor),
+        ('model', model)
     ])
 
     param_grid = {
-        'model__n_estimators': [100, 200, 300],
-        'model__max_depth': [3, 5, 8],
-        'model__learning_rate': [0.01, 0.05, 0.1]
+        'model__regressor__max_iter': [100, 200],
+        'model__regressor__max_depth': [3, 5],
+        'model__regressor__learning_rate': [0.01, 0.05]
     }
 
-    print("Starting Grid Search for Hyperparameter Tuning...")
-    grid_search = GridSearchCV(pipeline, param_grid, cv=3, scoring='r2', n_jobs=-1, verbose=1)
-    grid_search.fit(X_train, y_train)
+    print("Starting Grouped Grid Search for Hyperparameter Tuning...")
+    # Use GroupKFold so laps from the same race stay together
+    gkf = GroupKFold(n_splits=3)
+    grid_search = GridSearchCV(pipeline, param_grid, cv=gkf, scoring='r2', n_jobs=-1, verbose=1)
+    
+    grid_search.fit(X, y, groups=groups)
 
     best_model = grid_search.best_estimator_
-    y_pred = best_model.predict(X_test)
-
+    best_cv_score = grid_search.best_score_
+    
     print("\n--- Model Evaluation ---")
     print(f"Best Params: {grid_search.best_params_}")
-    print(f"R2 Score: {r2_score(y_test, y_pred):.4f}")
-    print(f"MAE: {mean_absolute_error(y_test, y_pred):.4f}")
-    print(f"RMSE: {np.sqrt(mean_squared_error(y_test, y_pred)):.4f}")
+    print(f"Best CV R2 Score (GroupKFold): {best_cv_score:.4f}")
+    
+    y_pred = best_model.predict(X)
+    print(f"Overall Dataset R2 Score: {r2_score(y, y_pred):.4f}")
+    print(f"Overall Dataset MAE: {mean_absolute_error(y, y_pred):.4f}")
+    print(f"Overall Dataset RMSE: {np.sqrt(mean_squared_error(y, y_pred)):.4f}")
 
     model_dir = os.path.join(os.path.dirname(__file__), "..", "models")
     os.makedirs(model_dir, exist_ok=True)
