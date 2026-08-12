@@ -17,6 +17,13 @@ from pipelines.cognitive_gforce import compute_lateral_g, compute_psychological_
 from schemas.telemetry import TelemetryPoint
 from config import settings
 
+def append_to_csv(data_chunk, filepath):
+    if not data_chunk:
+        return
+    df = pd.DataFrame(data_chunk)
+    write_header = not os.path.exists(filepath)
+    df.to_csv(filepath, mode='a', index=False, header=write_header)
+
 async def main(max_clips: int):
     print("Initializing F1 Telemetry Cache...")
     cache_dir = str(settings.fastf1_cache_dir)
@@ -166,7 +173,14 @@ async def main(max_clips: int):
             # Compute true psychological frustration
             s_psych = compute_psychological_frustration(stress_result.cognitive_load, g_lat)
             
+            tyre_compound = str(current_lap.get('Compound', 'UNKNOWN'))
+            tyre_life = current_lap.get('TyreLife', 1.0)
+            if pd.isna(tyre_life): tyre_life = 1.0
+            
+            track_status = str(current_lap.get('TrackStatus', '1'))
+            
             row = {
+                "race_id": session_key,
                 "cognitive_load": stress_result.cognitive_load,
                 "s_psych": float(s_psych),
                 "g_lat": float(g_lat),
@@ -177,6 +191,9 @@ async def main(max_clips: int):
                 "emotion_fearful": stress_result.emotions.fearful,
                 "sector": int(pd.notna(current_lap['Sector1Time'])) + 1,
                 "lap_progress": float(lap_prog),
+                "tyre_compound": tyre_compound,
+                "tyre_life": float(tyre_life),
+                "track_status": track_status,
                 "delta_seconds": float(delta)
             }
             
@@ -185,15 +202,21 @@ async def main(max_clips: int):
             if count % 10 == 0:
                 print(f"Processed {count}/{max_clips} clips...")
                 
+            # PERIODIC SAVE: Write every 100 clips
+            if count % 100 == 0:
+                csv_path = os.path.join(os.path.dirname(__file__), "..", "data", "real_training_data.csv")
+                os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+                append_to_csv(training_data, csv_path)
+                training_data.clear() # Clear memory
+                
         except Exception as e:
             print(f"Skipping clip due to error: {e}")
             continue
 
-    df = pd.DataFrame(training_data)
-    os.makedirs(os.path.join(os.path.dirname(__file__), "..", "data"), exist_ok=True)
     csv_path = os.path.join(os.path.dirname(__file__), "..", "data", "real_training_data.csv")
-    df.to_csv(csv_path, index=False)
-    print(f"Dataset generated at {csv_path} with {len(training_data)} records.")
+    os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+    append_to_csv(training_data, csv_path)
+    print(f"Dataset generation complete. Total records processed: {count}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate F1 Training Data")
