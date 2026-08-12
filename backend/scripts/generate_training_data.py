@@ -12,6 +12,8 @@ import io
 import librosa
 from datasets import load_dataset, Audio
 from pipelines.stress_analysis import analyze_stress
+from pipelines.cognitive_gforce import compute_lateral_g, compute_psychological_frustration
+from schemas.telemetry import TelemetryPoint
 from config import settings
 
 async def main():
@@ -36,7 +38,7 @@ async def main():
     
     print("Processing audio clips...")
     count = 0
-    max_clips = 500
+    max_clips = 2000
     AUDIO_OFFSET_SECONDS = 7
     
     for item in dataset:
@@ -93,8 +95,9 @@ async def main():
             if time_diffs.min() > pd.Timedelta(minutes=5):
                 continue # Clip time is too far from any telemetry
                 
-            closest_idx = time_diffs.idxmin()
-            point = car_data.loc[closest_idx]
+            closest_idx_label = time_diffs.idxmin()
+            closest_iloc = car_data.index.get_loc(closest_idx_label)
+            point = car_data.iloc[closest_iloc]
             
             # 4. Calculate lap time penalty (delta_seconds)
             driver_laps = session.laps.pick_driver(racing_number)
@@ -118,19 +121,50 @@ async def main():
             this_lap_time = current_lap['LapTime'].total_seconds()
             delta = max(0, this_lap_time - avg_lap_time)
             
+            # 5. Calculate true physics features
+            # Compute Lap Progress
+            lap_dur = current_lap['LapTime'].total_seconds()
+            if lap_dur > 0:
+                lap_prog = (point_time_td.total_seconds() - current_lap['LapStartTime'].total_seconds()) / lap_dur
+            else:
+                lap_prog = 0.5
+            lap_prog = max(0.0, min(1.0, lap_prog))
+            
+            # Compute G-Lat using 5-point window
+            window_start = max(0, closest_iloc - 2)
+            window_end = min(len(car_data), closest_iloc + 3)
+            window_df = car_data.iloc[window_start:window_end]
+            
+            telemetry_points = []
+            for _, r in window_df.iterrows():
+                telemetry_points.append(TelemetryPoint(
+                    time=r['Time'].total_seconds(),
+                    speed=float(r['Speed']),
+                    throttle=float(r['Throttle']),
+                    brake=float(r['Brake']),
+                    rpm=float(r['RPM']),
+                    x=float(r['X']),
+                    y=float(r['Y']),
+                    gear=int(r['nGear'])
+                ))
+                
+            g_lat_values = compute_lateral_g(telemetry_points, window_size=5)
+            g_lat = g_lat_values[len(g_lat_values)//2] if g_lat_values else 0.0
+            
+            # Compute true psychological frustration
+            s_psych = compute_psychological_frustration(stress_result.cognitive_load, g_lat)
+            
             row = {
                 "cognitive_load": stress_result.cognitive_load,
-                "s_psych": stress_result.cognitive_load - (0.3 * np.random.uniform(0, 5) * 20),
-                "g_lat": float(np.random.uniform(0, 5)), # Simulating lateral G if missing
+                "s_psych": float(s_psych),
+                "g_lat": float(g_lat),
                 "speed": float(point['Speed']),
                 "throttle": float(point['Throttle']),
                 "brake": float(point['Brake']),
                 "emotion_angry": stress_result.emotions.angry,
                 "emotion_fearful": stress_result.emotions.fearful,
                 "sector": int(pd.notna(current_lap['Sector1Time'])) + 1,
-                "lap_progress": float(np.random.uniform(0, 1)),
-                "jitter": float(np.random.uniform(0, 0.1)),
-                "shimmer": float(np.random.uniform(0, 0.1)),
+                "lap_progress": float(lap_prog),
                 "delta_seconds": float(delta)
             }
             
