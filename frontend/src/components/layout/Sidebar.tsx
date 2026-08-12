@@ -40,7 +40,7 @@ export default function Sidebar() {
   return (
     <>
       <div className="w-[110px] h-full flex flex-col py-6 pl-6 pr-2 z-50">
-        <div className="w-full h-full bg-[#0a0a0a] border-2 border-white/5 rounded-2xl flex flex-col items-center py-6 shadow-[0_0_25px_rgba(0,0,0,1)] relative overflow-hidden justify-between">
+        <div className="w-full h-full bg-[#0d0d0d] border border-[var(--theme-30)] hover:border-[var(--theme-50)] rounded-2xl flex flex-col items-center py-6 shadow-[0_0_15px_var(--theme-10)] hover:shadow-[0_0_25px_var(--theme-30)] transition-all duration-300 relative overflow-hidden justify-between">
         
         {/* Subtle red glow inside the sidebar */}
         <div className="absolute inset-0 bg-[#E60012]/5 blur-3xl opacity-50 pointer-events-none"></div>
@@ -97,23 +97,27 @@ export default function Sidebar() {
         </div>
 
         {/* Bottom Section: F1 Button */}
-        <div className="flex items-center justify-center w-full relative z-10 mt-4 flex-shrink-0 mb-4">
+        <div className="flex flex-col items-center justify-center w-full relative z-10 mt-4 flex-shrink-0 mb-4 gap-2">
           <motion.button 
             disabled={!isExecutionReady}
-            whileHover={isExecutionReady ? { scale: 1.15 } : {}}
+            whileHover={isExecutionReady ? { scale: 1.05 } : {}}
             whileTap={isExecutionReady ? { scale: 0.95 } : {}}
-            className={`group relative w-14 h-14 flex items-center justify-center transition-all ${isExecutionReady ? 'cursor-pointer' : 'opacity-30 cursor-not-allowed grayscale'}`}
+            className={`group relative w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300 ${
+              isExecutionReady 
+                ? 'cursor-pointer bg-[#E60012]/5 border border-[#E60012]/30 shadow-[0_0_15px_rgba(230,0,18,0.1)] hover:bg-[#E60012]/20 hover:border-[#E60012]/80 hover:shadow-[0_0_30px_rgba(230,0,18,0.4)]' 
+                : 'opacity-40 cursor-not-allowed bg-black/20 border border-white/5 grayscale'
+            }`}
           >
-            {isExecutionReady && (
-              <motion.div 
-                className="absolute inset-0 bg-[#E60012]/30 rounded-full blur-md"
-                initial={{ opacity: 0.4, scale: 0.8 }}
-                animate={{ opacity: [0.4, 0.8, 0.4], scale: [0.8, 1.2, 0.8] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              />
-            )}
-            <img src="/Icons/icon_f1_button.png" alt="Play" className={`w-10 h-10 object-contain relative z-10 transition-all duration-300 ${isExecutionReady ? 'drop-shadow-[0_0_15px_rgba(230,0,18,0.8)] group-hover:drop-shadow-[0_0_25px_rgba(230,0,18,1)] group-hover:brightness-125' : ''}`} />
+            <img 
+               src="/Icons/icon_f1_button.png" 
+               alt="Execute" 
+               className={`w-9 h-9 object-contain relative z-10 transition-all duration-300 ${isExecutionReady ? 'drop-shadow-[0_0_8px_rgba(230,0,18,0.5)] group-hover:brightness-125 group-hover:drop-shadow-[0_0_15px_rgba(230,0,18,0.8)]' : ''}`} 
+            />
           </motion.button>
+          
+          <div className={`text-[9px] font-f1 font-black uppercase tracking-[0.2em] transition-all duration-300 ${isExecutionReady ? 'text-[#E60012] drop-shadow-[0_0_5px_rgba(230,0,18,0.5)]' : 'text-white/20'}`}>
+            Execute
+          </div>
         </div>
       </div>
     </div>

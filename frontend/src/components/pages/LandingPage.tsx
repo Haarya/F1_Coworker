@@ -1,8 +1,14 @@
-import { Suspense } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { ScrollControls, Scroll, useProgress, Html } from '@react-three/drei';
 import { Activity } from 'lucide-react';
-import LandingScene from './LandingScene';
+import { useNavigate } from 'react-router-dom';
+
+const LandingScene = lazy(() => import('./LandingScene'));
+import { useTransition } from '../../context/TransitionContext';
+import { useGSAP } from '@gsap/react';
+import gsap from 'gsap';
+import { useRef } from 'react';
 
 // Custom Loader component
 function Loader() {
@@ -26,8 +32,33 @@ function Loader() {
 }
 
 export default function LandingPage() {
+  const navigate = useNavigate();
+  const { playTransition } = useTransition();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { contextSafe } = useGSAP({ scope: containerRef });
+
+  const handleEnterClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    // Phase 1: The Outro (The Speed Blur) - only this belongs to LandingPage's context
+    contextSafe(() => {
+      gsap.to(containerRef.current, {
+        scale: 0.85,
+        filter: 'blur(10px)',
+        duration: 0.7,
+        ease: 'power3.inOut'
+      });
+    })();
+
+    // The global transition has its own contextSafe inside TransitionContext.
+    // If we call it inside LandingPage's contextSafe, it gets destroyed when LandingPage unmounts!
+    playTransition(() => {
+      navigate('/dashboard');
+    });
+  };
+
   return (
-    <div className="h-screen w-full bg-[#080808] font-sans selection:bg-[#E31D2B] selection:text-white overflow-hidden relative">
+    <div ref={containerRef} className="h-screen w-full bg-[#080808] font-sans selection:bg-[#E31D2B] selection:text-white overflow-hidden relative">
       
       {/* 3D Canvas */}
       <Canvas camera={{ position: [0, 0.5, 3.5], fov: 45 }}>
@@ -83,6 +114,7 @@ export default function LandingPage() {
                 </p>
                 <a 
                   href="/dashboard"
+                  onClick={handleEnterClick}
                   className="inline-flex items-center gap-3 bg-[#E31D2B] hover:bg-red-700 text-white font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-105 shadow-[0_0_20px_rgba(227,29,43,0.4)] hover:shadow-[0_0_30px_rgba(227,29,43,0.6)]"
                 >
                   Enter Command Center

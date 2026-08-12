@@ -42,7 +42,7 @@ const Marker = ({ index }: { index: number }) => {
     11: '0'
   };
   return (
-    <div className="w-6 text-[9px] font-mono font-bold text-white/40 text-center">
+    <div className="w-8 text-[11px] font-mono font-bold text-white/40 text-center">
       {labels[index] || ''}
     </div>
   );
@@ -53,14 +53,16 @@ const ChevronGauge = ({ side, score }: { side: 'left' | 'right', score: number }
   const activeCount = Math.round((score / 100) * segments);
   
   return (
-    <div className={`flex flex-col gap-[5px] ${side === 'left' ? 'items-end' : 'items-start'}`}>
+    <div className={`flex flex-col gap-[10px] ${side === 'left' ? 'items-end' : 'items-start'}`}>
       {Array.from({ length: segments }).map((_, i) => {
         // Segments fill from bottom (i=11) to top (i=0)
         const isActive = (segments - 1 - i) < activeCount; 
         
         // Middle segments stick out the furthest to form the chevron point
         const distanceToCenter = Math.abs(5.5 - i);
-        const offsetX = distanceToCenter * 8; // Adjust slope steepness
+        // dy = height(18) + gap(10) = 28. To match 30deg skew exactly: dx = 28 * tan(30deg)
+        const slopeStep = 28 * Math.tan(30 * Math.PI / 180);
+        const offsetX = distanceToCenter * slopeStep;
         
         // Skew creates the slanted edges
         let skewDeg = 0;
@@ -76,8 +78,8 @@ const ChevronGauge = ({ side, score }: { side: 'left' | 'right', score: number }
             
             <motion.div
               style={{
-                width: '65px',
-                height: '12px',
+                width: '80px',
+                height: '18px',
                 // Combine translation for the V-shape and skew for the slanted edges
                 transform: `translateX(${side === 'left' ? offsetX : -offsetX}px) skewX(${skewDeg}deg)`,
               }}
@@ -114,19 +116,19 @@ export const DriverStressMeter: React.FC<DriverStressMeterProps> = ({ stressScor
   return (
     <div className="relative w-full h-full min-h-[450px] bg-[#090909] rounded-2xl border border-white/5 overflow-hidden shadow-[inset_0_0_40px_rgba(0,0,0,0.8)]">
     
-      {/* Centered & 25px Uplift Wrapper */}
-      <div className="absolute top-0 left-1/2 w-full h-full -translate-x-1/2 -translate-y-[25px]">
+      {/* Centered Wrapper */}
+      <div className="absolute top-0 left-1/2 w-full h-full -translate-x-1/2">
       
         {/* Header (visually corrected for letter-spacing) */}
-        <h2 className="absolute top-6 left-1/2 -translate-x-1/2 text-[10px] font-black uppercase tracking-[0.3em] text-white/30 z-20 text-center pl-[0.3em] whitespace-nowrap">
+        <h2 className="absolute top-5 left-1/2 -translate-x-1/2 text-[13px] font-f1 font-black uppercase tracking-[0.35em] text-[var(--theme-70)] z-20 flex items-center gap-2 drop-shadow-[0_0_8px_var(--theme-50)] whitespace-nowrap">
           Driver Stress Level
         </h2>
 
         {/* Center Readout & Radar Reticle */}
-        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none mb-10">
+        <div className="absolute bottom-[20px] left-0 w-full h-[350px] flex items-center justify-center z-10 pointer-events-none">
           
           {/* Reticle Rings */}
-          <svg className="absolute w-[280px] h-[280px] opacity-10" viewBox="0 0 100 100">
+          <svg className="absolute w-[350px] h-[350px] opacity-10" viewBox="0 0 100 100">
              <circle cx="50" cy="50" r="48" fill="none" stroke="white" strokeWidth="0.5" strokeDasharray="1 3" />
              <circle cx="50" cy="50" r="35" fill="none" stroke="white" strokeWidth="0.2" />
              {/* Crosshairs */}
@@ -135,9 +137,9 @@ export const DriverStressMeter: React.FC<DriverStressMeterProps> = ({ stressScor
           </svg>
           
           {/* Digital Readout */}
-          <div className="flex flex-col items-center justify-center relative z-20 bg-[#090909]/60 w-[120px] h-[120px] rounded-full backdrop-blur-sm border border-white/5">
+          <div className="flex flex-col items-center justify-center relative z-20 bg-[#090909]/60 w-[150px] h-[150px] rounded-full backdrop-blur-sm border border-white/5">
             <motion.span 
-              className="text-6xl font-black tracking-tighter text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]" 
+              className="text-[75px] leading-none font-f1 font-black tracking-tighter text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]" 
               key={fakeScore}
               initial={{ scale: 1.1, opacity: 0.8 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -145,28 +147,28 @@ export const DriverStressMeter: React.FC<DriverStressMeterProps> = ({ stressScor
             >
               {Math.round(fakeScore)}
             </motion.span>
-            <span className="text-[9px] text-white/40 tracking-[0.2em] mt-1 font-bold pl-[0.2em]">/ 100</span>
+            <span className="text-[11px] text-white/40 tracking-[0.2em] mt-1 font-bold pl-[0.2em]">/ 100</span>
           </div>
         </div>
 
         {/* Gauges Container */}
-        <div className="absolute inset-0 flex justify-between items-center px-12 z-10 pointer-events-none mb-10">
+        <div className="absolute bottom-[20px] left-0 w-full h-[350px] flex justify-between items-center px-8 z-10 pointer-events-none">
            <ChevronGauge side="left" score={fakeScore} />
            <ChevronGauge side="right" score={fakeScore} />
         </div>
 
         {/* 3D Car Stage */}
-        <div className="absolute bottom-0 w-full h-[60%] z-30">
+        <div className="absolute bottom-[-65px] w-full h-[60%] z-30">
            
            {/* Floor Glow (Red Ambient Light) */}
-           <div className="absolute bottom-[-20%] left-1/2 -translate-x-1/2 w-[80%] h-[60%] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[var(--theme-30)] via-[var(--theme-10)] to-transparent blur-3xl pointer-events-none"></div>
+           <div className="absolute bottom-[-20%] left-1/2 -translate-x-1/2 w-[100%] h-[75%] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[var(--theme-30)] via-[var(--theme-10)] to-transparent blur-3xl pointer-events-none"></div>
            
            {/* Concentric Stage Rings */}
-           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[60%] h-[40px] border border-white/10 rounded-full opacity-20 pointer-events-none" style={{ maskImage: 'linear-gradient(to bottom, transparent, black)' }}></div>
-           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[75%] h-[50px] border border-white/5 rounded-full opacity-20 pointer-events-none" style={{ maskImage: 'linear-gradient(to bottom, transparent, black)' }}></div>
+           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[75%] h-[50px] border border-white/10 rounded-full opacity-20 pointer-events-none" style={{ maskImage: 'linear-gradient(to bottom, transparent, black)' }}></div>
+           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[90%] h-[60px] border border-white/5 rounded-full opacity-20 pointer-events-none" style={{ maskImage: 'linear-gradient(to bottom, transparent, black)' }}></div>
 
            {/* R3F Canvas */}
-           <Canvas camera={{ position: [0, 1.5, 6], fov: 45 }}>
+           <Canvas camera={{ position: [0, 1.5, 6], fov: 36 }}>
              <React.Suspense fallback={null}>
                <ambientLight intensity={0.6} />
                <directionalLight position={[10, 10, 10]} intensity={2} color="#ffffff" />

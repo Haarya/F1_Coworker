@@ -1,5 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Syncopate:wght@400;700&display=swap');
 @import "tailwindcss";
 @import "./dashboard.css";
+
+/* Proprietary Font Definitions (Will automatically activate if files are present in public/fonts/) */
+@font-face {
+  font-family: 'Formula1';
+  src: local('Formula1'), url('/fonts/Formula1-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Formula1';
+  src: local('Formula1 Black'), url('/fonts/Formula1-Black.woff2') format('woff2');
+  font-weight: 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NeueMontreal';
+  src: local('NeueMontreal'), url('/fonts/NeueMontreal-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NeueMontreal';
+  src: local('NeueMontreal Bold'), url('/fonts/NeueMontreal-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
 
 @theme {
   --color-bg-dark: #080808;
@@ -10,12 +40,15 @@
   --color-text-primary: #ffffff;
   --color-text-secondary: #a0a0a0;
   --color-border: #333333;
+  
+  --font-f1: 'Formula1', 'Syncopate', sans-serif;
+  --font-neue: 'NeueMontreal', 'Manrope', sans-serif;
 }
 
 :root {
   background-color: var(--color-bg-dark);
   color: var(--color-text-primary);
-  font-family: 'Inter', 'Roboto Mono', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: var(--font-neue);
 }
 
 body {

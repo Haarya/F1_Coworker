@@ -19,10 +19,7 @@ export default function LiveTerminal() {
 
   return (
     <div className="bg-[#141414] border border-[#333] rounded-xl w-full h-full flex flex-col pointer-events-auto">
-      <div className="px-4 py-2 border-b border-white/10 bg-black/20 flex justify-between items-center">
-        <span className="text-[10px] uppercase tracking-widest text-text-secondary font-bold">Team Radio</span>
-        <span className="w-2 h-2 rounded-full bg-[#E10600] animate-pulse" />
-      </div>
+
       
       <div ref={terminalRef} className="flex-1 p-4 overflow-y-auto font-mono text-xs flex flex-col gap-2">
         {visibleEvents.length === 0 ? (

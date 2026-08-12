@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import LiveTerminal from '../transcript/LiveTerminal';
 import LapPenaltyCard from '../prediction/LapPenaltyCard';
 import { DriverStressMeter } from '../stress/DriverStressMeter';
-import UploadAudioCard from '../shared/UploadAudioCard';
 import DriverAnalyticsCard from '../stress/DriverAnalyticsCard';
 import CircuitMapCard from '../prediction/CircuitMapCard';
 import { usePlayback } from '../../hooks/usePlayback';
@@ -10,11 +9,22 @@ import { useClipSync } from '../../hooks/useClipSync';
 import ActiveInterceptOverlay from '../stress/ActiveInterceptOverlay';
 import Sidebar from '../layout/Sidebar';
 import { useRaceSession } from '../../context/RaceSessionContext';
+import { useGSAP } from '@gsap/react';
+import gsap from 'gsap';
+import { useRef } from 'react';
 
 export default function Dashboard() {
   usePlayback();
   useClipSync();
   const { state } = useRaceSession();
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    gsap.fromTo('.gsap-bento',
+      { y: 40, opacity: 0 },
+      { y: 0, opacity: 1, stagger: 0.03, duration: 0.6, ease: 'power4.out' }
+    );
+  }, { scope: containerRef });
 
   const themeVars = useMemo(() => {
     const hex = state.driverGlowHex || '#E60012';
@@ -33,31 +43,27 @@ export default function Dashboard() {
   }, [state.driverGlowHex]);
 
   return (
-    <div className="h-screen w-screen bg-[#050505] overflow-hidden flex font-sans" style={themeVars}>
+    <div className="h-screen w-screen bg-[#050505] overflow-hidden flex font-neue" style={themeVars}>
       <ActiveInterceptOverlay />
       
       {/* Left Sidebar Navigation */}
       <Sidebar />
       
       {/* Main content area */}
-      <div className="flex-1 flex flex-col p-4 pl-0 relative min-h-0 overflow-hidden">
+      <div ref={containerRef} className="flex-1 flex flex-col p-4 pl-0 relative min-h-0 overflow-hidden">
         
         {/* Dashboard Grid - 3 Columns */}
         <div className="flex-1 flex gap-4 min-h-0 relative z-10 w-full max-w-[1920px] mx-auto p-4 pt-0">
           
-          {/* Left Column (Team Radio & Upload Audio) */}
+          {/* Left Column (Team Radio) */}
           <div className="w-[22%] flex flex-col gap-4 min-h-0 h-full">
-            <div className="flex-[2] min-h-0 bg-[#0d0d0d] rounded-2xl overflow-hidden border border-[var(--theme-30)] relative shadow-[0_0_15px_var(--theme-10)] hover:shadow-[0_0_25px_var(--theme-30)] transition-all duration-300">
-              <h2 className="absolute top-4 left-5 z-10 text-[10px] font-bold uppercase tracking-widest text-[var(--theme-70)] flex items-center gap-2 drop-shadow-[0_0_8px_var(--theme-50)]">
+            <div className="gsap-bento flex-1 min-h-0 bg-[#0d0d0d] rounded-2xl overflow-hidden border border-[var(--theme-30)] relative shadow-[0_0_15px_var(--theme-10)] hover:shadow-[0_0_25px_var(--theme-30)] transition-all duration-300">
+              <h2 className="absolute top-5 left-5 z-20 text-[13px] font-f1 font-black uppercase tracking-[0.35em] text-[var(--theme-70)] flex items-center gap-2 drop-shadow-[0_0_8px_var(--theme-50)] whitespace-nowrap">
                  <span className="text-[var(--theme-base)] text-xs animate-pulse">((•))</span> Team Radio
               </h2>
-              <div className="pt-14 w-full h-full p-2">
+              <div className="pt-16 w-full h-full p-2 pb-4">
                 <LiveTerminal />
               </div>
-            </div>
-            
-            <div className="flex-[1] min-h-0 flex flex-col">
-              <UploadAudioCard />
             </div>
           </div>
           
@@ -65,16 +71,16 @@ export default function Dashboard() {
           <div className="flex-1 flex flex-col gap-4 min-h-0 h-full">
             
             {/* Stress Level */}
-            <div className="flex-[2] bg-[#0d0d0d] rounded-2xl border border-[var(--theme-30)] flex flex-col relative min-h-0 overflow-hidden shadow-[0_0_15px_var(--theme-10)] hover:shadow-[0_0_25px_var(--theme-30)] transition-all duration-300">
+            <div className="gsap-bento flex-[2] bg-[#0d0d0d] rounded-2xl border border-[var(--theme-30)] flex flex-col relative min-h-0 overflow-hidden shadow-[0_0_15px_var(--theme-10)] hover:shadow-[0_0_25px_var(--theme-30)] transition-all duration-300">
               <DriverStressMeter stressScore={state.currentCLIndex || 0} />
             </div>
             
             {/* Bottom Row (Penalty Model & Driver Analytics) */}
             <div className="flex-[1] flex gap-4 min-h-0">
-               <div className="flex-[1] min-h-0 flex flex-col">
+               <div className="gsap-bento flex-[1] min-h-0 flex flex-col">
                  <LapPenaltyCard />
                </div>
-               <div className="flex-[1.3] min-h-0 flex flex-col">
+               <div className="gsap-bento flex-[1.3] min-h-0 flex flex-col">
                  <DriverAnalyticsCard />
                </div>
             </div>
@@ -84,12 +90,12 @@ export default function Dashboard() {
           <div className="w-[22%] flex flex-col gap-4 min-h-0 h-full">
             
             {/* Circuit Map */}
-            <div className="flex-[1.3] min-h-0 flex flex-col">
+            <div className="gsap-bento flex-[1.3] min-h-0 flex flex-col">
                <CircuitMapCard />
             </div>
             
             {/* Driver Portrait Card */}
-            <div className="flex-[1.5] rounded-2xl border-2 flex flex-col relative overflow-hidden shadow-[0_0_15px_var(--theme-10)] hover:shadow-[0_0_25px_var(--theme-30)] transition-all duration-500"
+            <div className="gsap-bento flex-[1.5] rounded-2xl border-2 flex flex-col relative overflow-hidden shadow-[0_0_15px_var(--theme-10)] hover:shadow-[0_0_25px_var(--theme-30)] transition-all duration-500"
                  style={{ 
                    borderColor: 'var(--theme-40)', 
                    boxShadow: '0 0 25px var(--theme-20)',

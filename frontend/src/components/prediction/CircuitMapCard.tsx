@@ -14,11 +14,11 @@ export default function CircuitMapCard() {
 
   return (
     <div className="flex-1 bg-[#0d0d0d] rounded-2xl border border-[var(--theme-30)] flex flex-col relative min-h-0 p-3 shadow-[0_0_15px_var(--theme-10)] hover:shadow-[0_0_25px_var(--theme-30)] transition-all duration-300 overflow-hidden">
-      <h2 className="text-[8px] font-bold uppercase tracking-widest text-[var(--theme-base)] mb-3 drop-shadow-[0_0_8px_var(--theme-50)] absolute top-3 left-4 z-20">
+      <h2 className="absolute top-5 left-5 z-20 text-[13px] font-f1 font-black uppercase tracking-[0.35em] text-[var(--theme-70)] flex items-center gap-2 drop-shadow-[0_0_8px_var(--theme-50)] whitespace-nowrap">
         Circuit Map • Live
       </h2>
       
-      <div className="flex-1 w-full h-full flex flex-col items-center justify-center z-10 relative mt-4">
+      <div className="flex-1 w-full h-full flex flex-col items-center justify-center z-10 relative mt-12">
          
          {/* Map Image */}
          <div className="w-full flex-1 flex items-center justify-center min-h-0">

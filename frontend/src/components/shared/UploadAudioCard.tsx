@@ -20,8 +20,8 @@ export default function UploadAudioCard() {
     <div className="w-full h-full bg-[#0d0d0d] rounded-2xl overflow-hidden border border-[var(--theme-30)] relative shadow-[0_0_15px_var(--theme-10)] hover:shadow-[0_0_25px_var(--theme-30)] transition-all duration-300 flex flex-col">
       
       {/* Header */}
-      <h2 className="absolute top-4 left-5 z-10 text-[10px] font-bold uppercase tracking-widest text-[var(--theme-70)] flex items-center gap-2 drop-shadow-[0_0_8px_var(--theme-50)]">
-        <UploadCloud className="w-3.5 h-3.5 text-[var(--theme-base)]" />
+      <h2 className="absolute top-5 left-5 z-20 text-[13px] font-f1 font-black uppercase tracking-[0.35em] text-[var(--theme-70)] flex items-center gap-2 drop-shadow-[0_0_8px_var(--theme-50)] whitespace-nowrap">
+        <UploadCloud className="w-4 h-4 text-[var(--theme-base)]" />
         Upload Audio File
       </h2>
 
