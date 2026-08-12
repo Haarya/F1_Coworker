@@ -9,6 +9,7 @@ import numpy as np
 import fastf1
 import asyncio
 import io
+import argparse
 import librosa
 from datasets import load_dataset, Audio
 from pipelines.stress_analysis import analyze_stress
@@ -16,7 +17,7 @@ from pipelines.cognitive_gforce import compute_lateral_g, compute_psychological_
 from schemas.telemetry import TelemetryPoint
 from config import settings
 
-async def main():
+async def main(max_clips: int):
     print("Initializing F1 Telemetry Cache...")
     cache_dir = str(settings.fastf1_cache_dir)
     os.makedirs(cache_dir, exist_ok=True)
@@ -35,10 +36,10 @@ async def main():
     
     training_data = []
     loaded_sessions = {}
+    loaded_telemetry = {}
     
-    print("Processing audio clips...")
+    print(f"Processing up to {max_clips} audio clips...")
     count = 0
-    max_clips = 2000
     AUDIO_OFFSET_SECONDS = 7
     
     for item in dataset:
@@ -82,10 +83,21 @@ async def main():
             clip_time_utc = pd.to_datetime(message_timestamp, utc=True) + pd.Timedelta(seconds=AUDIO_OFFSET_SECONDS)
             
             # 3. Find Exact Telemetry
-            if not session.car_data or racing_number not in session.car_data:
+            session_key_driver = f"{year}_{race_name}_{racing_number}"
+            if session_key_driver not in loaded_telemetry:
+                try:
+                    loaded_telemetry[session_key_driver] = session.laps.pick_driver(racing_number).get_telemetry()
+                except Exception as e:
+                    print(f"Telemetry missing for {racing_number}: {e}")
+                    continue
+                    
+            car_data = loaded_telemetry[session_key_driver]
+            if car_data is None or car_data.empty:
                 continue
                 
-            car_data = session.car_data[racing_number]
+            if 'Date' not in car_data.columns:
+                continue
+
             # Ensure Date column is timezone aware to compare with clip_time_utc
             if car_data['Date'].dt.tz is None:
                 car_data['Date'] = car_data['Date'].dt.tz_localize('UTC')
@@ -184,4 +196,7 @@ async def main():
     print(f"Dataset generated at {csv_path} with {len(training_data)} records.")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    parser = argparse.ArgumentParser(description="Generate F1 Training Data")
+    parser.add_argument("--limit", type=int, default=2000, help="Max clips to process")
+    args = parser.parse_args()
+    asyncio.run(main(args.limit))
