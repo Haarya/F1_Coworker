@@ -37,6 +37,7 @@ interface RaceSessionState {
   selectedCircuit: string | null;
   selectedYear: number | null;
   selectedSession: string | null;
+  isExecuting: boolean;
 }
 
 type RaceSessionAction =
@@ -49,7 +50,9 @@ type RaceSessionAction =
   | { type: 'SET_SELECTED_DRIVER'; payload: { path: string, hex: string } }
   | { type: 'SET_SELECTED_CIRCUIT'; payload: string }
   | { type: 'SET_SELECTED_YEAR'; payload: number }
-  | { type: 'SET_SELECTED_SESSION'; payload: string };
+  | { type: 'SET_SELECTED_SESSION'; payload: string }
+  | { type: 'START_EXECUTION' }
+  | { type: 'LOAD_REAL_DATA'; payload: { telemetry: TelemetryPoint[], radio: RadioEvent[] } };
 
 const initialState: RaceSessionState = {
   driverId: 'VER',
@@ -85,6 +88,7 @@ const initialState: RaceSessionState = {
   selectedCircuit: '/Images/F1_circuit/Monaco_Circuit.avif',
   selectedYear: 2024,
   selectedSession: 'Main Race',
+  isExecuting: false,
 };
 
 const RaceSessionContext = createContext<{
@@ -101,6 +105,14 @@ function reducer(state: RaceSessionState, action: RaceSessionAction): RaceSessio
     case 'SET_SELECTED_CIRCUIT': return { ...state, selectedCircuit: action.payload };
     case 'SET_SELECTED_YEAR': return { ...state, selectedYear: action.payload };
     case 'SET_SELECTED_SESSION': return { ...state, selectedSession: action.payload };
+    case 'START_EXECUTION': return { ...state, isExecuting: true };
+    case 'LOAD_REAL_DATA': 
+      return { 
+        ...state, 
+        telemetryStream: action.payload.telemetry, 
+        radioEvents: action.payload.radio,
+        playbackTimestamp: 0 // Reset playback when loading real data
+      };
     case 'TOGGLE_PLAYBACK': 
       return { 
         ...state, 

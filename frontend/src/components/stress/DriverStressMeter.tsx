@@ -112,10 +112,18 @@ export const DriverStressMeter: React.FC<DriverStressMeterProps> = ({ stressScor
   };
   const gpName = state.selectedCircuit ? getCircuitName(state.selectedCircuit) : '';
 
+  const driverMapping: Record<string, string> = {
+    'Max': 'VER', 'Lewis': 'HAM', 'Charles': 'LEC', 'Sergio': 'PER',
+    'Lando': 'NOR', 'Carlos': 'SAI', 'George': 'RUS', 'Oscar': 'PIA',
+    'Fernando': 'ALO', 'Lance': 'STR'
+  };
+  const rawDriverName = state.selectedDriver?.split('/').pop()?.split('_')[0] || 'Max';
+  const driverName = driverMapping[rawDriverName] || rawDriverName;
+
   const { data: telemetryData } = useTelemetryStream(
     state.selectedYear!,
     gpName,
-    state.selectedDriver!,
+    driverName,
     state.selectedSession!
   );
 

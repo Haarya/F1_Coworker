@@ -1,32 +1,42 @@
 import { Lock, Loader2 } from 'lucide-react';
 import { useRaceSession } from '../../context/RaceSessionContext';
-import { useTelemetryLaps, useDriverStress } from '../../hooks/useApi';
+import { useTelemetryLaps } from '../../hooks/useApi';
 
 export default function DriverAnalyticsCard() {
   const { state } = useRaceSession();
   
+  const gpName = state.selectedCircuit?.split('/').pop()?.split('_')[0] || state.gpName || 'Monaco';
+  
+  const driverMapping: Record<string, string> = {
+    'Max': 'VER', 'Lewis': 'HAM', 'Charles': 'LEC', 'Sergio': 'PER',
+    'Lando': 'NOR', 'Carlos': 'SAI', 'George': 'RUS', 'Oscar': 'PIA',
+    'Fernando': 'ALO', 'Lance': 'STR'
+  };
+  const rawDriverName = state.selectedDriver?.split('/').pop()?.split('_')[0] || 'Max';
+  const driverName = driverMapping[rawDriverName] || rawDriverName;
+
   // Use React Query to fetch backend telemetry laps
   const { isLoading: isLapsLoading, isError: isLapsError } = useTelemetryLaps(
     state.selectedYear!,
-    state.selectedCircuit!,
-    state.selectedDriver!
+    gpName,
+    driverName
   );
 
-  // Fetch real ML stress from Wav2Vec2 via backend
-  const { data: stressResult, isLoading: isStressLoading, isError: isStressError } = useDriverStress("sample_radio");
+  // Find the currently active radio event based on playback
+  const activeRadio = state.radioEvents.find(r => r.id === state.activeEventId);
 
-  // Derive score from real ML or fallback
-  const score = stressResult?.cognitive_load ?? state.currentCLIndex ?? 80.4;
+  // Derive score from active ML radio event or fallback
+  const score = activeRadio?.cognitiveLoad ?? state.currentCLIndex ?? 80.4;
   
   // Determine primary emotion from ML result
   let emotion = "Angry";
   let category = "CRITICAL";
   
-  if (stressResult?.emotions && stressResult?.zone) {
-      // Find the max emotion from the dictionary
-      const maxEmotion = Object.entries(stressResult.emotions).reduce((a, b) => (a[1] as number) > (b[1] as number) ? a : b);
+  if (activeRadio?.emotions) {
+      const emotionsMap = activeRadio.emotions as unknown as Record<string, number>;
+      const maxEmotion = Object.entries(emotionsMap).reduce((a, b) => a[1] > b[1] ? a : b);
       emotion = maxEmotion[0].charAt(0).toUpperCase() + maxEmotion[0].slice(1);
-      category = stressResult.zone.toUpperCase();
+      category = (activeRadio as any).zone || "ELEVATED"; 
   } else {
       if (score < 40) {
         emotion = "Focused";
@@ -34,11 +44,14 @@ export default function DriverAnalyticsCard() {
       } else if (score < 75) {
         emotion = "Tense";
         category = "ELEVATED";
+      } else {
+        emotion = "Angry";
+        category = "CRITICAL";
       }
   }
 
-  const isLoading = isLapsLoading || isStressLoading;
-  const isError = isLapsError || isStressError;
+  const isLoading = isLapsLoading;
+  const isError = isLapsError;
 
   return (
     <div className="flex-1 bg-[#0d0d0d] rounded-2xl overflow-hidden border border-[var(--theme-30)] relative shadow-[0_0_15px_var(--theme-10)] hover:shadow-[0_0_25px_var(--theme-30)] transition-all duration-300 flex flex-col p-5">

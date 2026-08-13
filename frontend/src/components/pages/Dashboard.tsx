@@ -11,13 +11,55 @@ import Sidebar from '../layout/Sidebar';
 import { useRaceSession } from '../../context/RaceSessionContext';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
+import { useTelemetryStream, useRadioEvents } from '../../hooks/useApi';
 
 export default function Dashboard() {
   usePlayback();
   useClipSync();
-  const { state } = useRaceSession();
+  const { state, dispatch } = useRaceSession();
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Extract gpName from selectedCircuit (e.g. "/Images/F1_circuit/Monaco_Circuit.avif" -> "Monaco")
+  const gpName = state.selectedCircuit?.split('/').pop()?.split('_')[0] || state.gpName || 'Monaco';
+  
+  // Map driver names to FastF1 3-letter abbreviations
+  const driverMapping: Record<string, string> = {
+    'Max': 'VER',
+    'Lewis': 'HAM',
+    'Charles': 'LEC',
+    'Sergio': 'PER',
+    'Lando': 'NOR',
+    'Carlos': 'SAI',
+    'George': 'RUS',
+    'Oscar': 'PIA',
+    'Fernando': 'ALO',
+    'Lance': 'STR'
+  };
+  
+  const rawDriverName = state.selectedDriver?.split('/').pop()?.split('_')[0] || 'Max';
+  const driverName = driverMapping[rawDriverName] || rawDriverName;
+
+  const { data: telemetryData } = useTelemetryStream(
+    state.selectedYear || 2024,
+    gpName,
+    driverName,
+    state.selectedSession || 'Race',
+    state.isExecuting
+  );
+
+  const { data: radioData } = useRadioEvents(
+    driverName,
+    gpName,
+    state.isExecuting
+  );
+
+  useEffect(() => {
+    if (state.isExecuting && telemetryData?.data && radioData && state.playbackState === 'idle') {
+      dispatch({ type: 'LOAD_REAL_DATA', payload: { telemetry: telemetryData.data, radio: radioData } });
+      dispatch({ type: 'TOGGLE_PLAYBACK' });
+    }
+  }, [state.isExecuting, telemetryData, radioData, state.playbackState, dispatch]);
 
   useGSAP(() => {
     gsap.fromTo('.gsap-bento',

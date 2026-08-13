@@ -44,7 +44,14 @@ class TelemetryService:
         session = cls.get_session(year, gp)
         laps = session.laps.pick_driver(driver)
         lap = laps[laps['LapNumber'] == lap_number].iloc[0]
-        telemetry = lap.get_telemetry()
+        
+        try:
+            telemetry = lap.get_telemetry()
+        except KeyError:
+            # Fallback if position data (X, Y) is unavailable for this session (e.g., 2018 Australia)
+            telemetry = lap.get_car_data()
+            telemetry['X'] = 0.0
+            telemetry['Y'] = 0.0
         
         points = []
         for _, row in telemetry.iterrows():

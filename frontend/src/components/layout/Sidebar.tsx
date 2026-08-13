@@ -102,6 +102,7 @@ export default function Sidebar() {
             disabled={!isExecutionReady}
             whileHover={isExecutionReady ? { scale: 1.05 } : {}}
             whileTap={isExecutionReady ? { scale: 0.95 } : {}}
+            onClick={() => dispatch({ type: 'START_EXECUTION' })}
             className={`group relative w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300 ${
               isExecutionReady 
                 ? 'cursor-pointer bg-[#E60012]/5 border border-[#E60012]/30 shadow-[0_0_15px_rgba(230,0,18,0.1)] hover:bg-[#E60012]/20 hover:border-[#E60012]/80 hover:shadow-[0_0_30px_rgba(230,0,18,0.4)]' 

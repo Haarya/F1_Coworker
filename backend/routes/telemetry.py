@@ -17,7 +17,7 @@ async def get_driver_laps(year: int, gp: str, driver: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/stream", response_model=TelemetryStream)
-async def get_driver_telemetry(year: int, gp: str, driver: str, lap_number: int):
+async def get_driver_telemetry(year: int, gp: str, driver: str, session: str = "Race", lap_number: int = 1):
     try:
         stream = TelemetryService.get_telemetry_stream(year, gp, driver, lap_number)
         return stream

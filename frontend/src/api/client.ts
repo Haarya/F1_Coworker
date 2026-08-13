@@ -43,8 +43,8 @@ export const ApiClient = {
   getTelemetryLaps: (year: number, gp: string, driver: string) => 
     fetchApi<any[]>(`/telemetry/laps?year=${year}&gp=${gp}&driver=${driver}`),
 
-  getTelemetryStream: (year: number, gp: string, driver: string, session: string = 'Race') => 
-    fetchApi<any>(`/telemetry/stream?year=${year}&gp=${gp}&driver=${driver}&session=${session}`),
+  getTelemetryStream: (year: number, gp: string, driver: string, session: string = 'Race', lapNumber: number = 1) => 
+    fetchApi<any>(`/telemetry/stream?year=${year}&gp=${gp}&driver=${driver}&session=${session}&lap_number=${lapNumber}`),
 
   // Prediction (Updated)
   postLapPenalty: (data: any) => 
