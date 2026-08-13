@@ -6,8 +6,12 @@
 # Ignore env files
 .env
 .env.local
+# Python & Backend
 **/__pycache__/
+*.py[cod]
+*$py.class
 backend/data/fastf1_cache/
+backend/data/
 data/
 venv*/
 backend/venv*/
