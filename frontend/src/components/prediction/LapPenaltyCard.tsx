@@ -1,13 +1,49 @@
 import { useRaceSession } from '../../context/RaceSessionContext';
-import { AlertTriangle, Clock, TrendingUp } from 'lucide-react';
+import { useTelemetryLaps, useDriverStress, useLapPenaltyMutation } from '../../hooks/useApi';
+import { AlertTriangle, TrendingUp } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function LapPenaltyCard() {
   const { state } = useRaceSession();
   
-  const clIndex = state.currentCLIndex;
+  const { data: laps } = useTelemetryLaps(
+    state.selectedYear!,
+    state.selectedCircuit!,
+    state.selectedDriver!
+  );
+
+  const { data: stressResult } = useDriverStress("sample_radio");
   
-  const probability = clIndex > 80 ? 0.85 : clIndex > 60 ? 0.45 : 0.05;
-  const delta = (probability * 0.4).toFixed(2);
+  const lapPenaltyMutation = useLapPenaltyMutation();
+  const [prediction, setPrediction] = useState<{probability: number, delta_seconds: number, sector: number} | null>(null);
+
+  useEffect(() => {
+    if (stressResult) {
+      // Build features object to send to the backend
+      const latestLap = laps && laps.length > 0 ? laps[laps.length - 1] : null;
+      
+      const features = {
+        cognitive_load: stressResult.cognitive_load,
+        emotion_angry: stressResult.emotions?.angry || 0,
+        emotion_fearful: stressResult.emotions?.fearful || 0,
+        speed: latestLap?.Speed || 200,
+        throttle: latestLap?.Throttle || 80,
+        brake: latestLap?.Brake || 0,
+        g_lat: 1.5,
+        sector: latestLap?.Sector1Time ? (latestLap?.Sector2Time ? 3 : 2) : 1
+      };
+
+      lapPenaltyMutation.mutate(features, {
+        onSuccess: (data) => {
+          setPrediction(data);
+        }
+      });
+    }
+  }, [stressResult, laps]);
+  
+  const probability = prediction ? prediction.probability : 0.05;
+  const delta = prediction ? prediction.delta_seconds.toFixed(2) : "0.00";
+  const sector = prediction ? prediction.sector : 3;
   
   return (
     <div className="w-full h-full bg-[#0d0d0d] border border-[var(--theme-30)] hover:border-[var(--theme-50)] rounded-2xl p-3 flex flex-col gap-2 shadow-[0_0_15px_var(--theme-10)] hover:shadow-[0_0_25px_var(--theme-30)] transition-all duration-300 relative">
@@ -46,6 +82,14 @@ export default function LapPenaltyCard() {
               +{delta}s
             </div>
           </div>
+        </div>
+        {/* Warning Text Area */}
+        <div className="bg-[#050505] rounded-xl p-2 text-xs text-white/60 border border-[var(--theme-20)] flex items-start gap-2 relative overflow-hidden group shadow-[inset_0_0_15px_var(--theme-10)] shrink-0">
+          <div className="absolute inset-0 bg-[var(--theme-10)] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <AlertTriangle size={16} className={`${probability > 0.6 ? 'text-[var(--theme-base)]' : 'text-yellow-500'} shrink-0 mt-0.5 relative z-10`} />
+          <p className="leading-tight relative z-10 text-[9px]">
+            <strong className="text-white tracking-wide">WARNING:</strong> Current telemetry and stress indicates an <strong className={`${probability > 0.6 ? 'text-[var(--theme-base)]' : 'text-yellow-500'}`}>{(probability * 100).toFixed(0)}% probability</strong> of a <strong className="text-white">+{delta}s penalty</strong> in Sector {sector}.
+          </p>
         </div>
       </div>
     </div>

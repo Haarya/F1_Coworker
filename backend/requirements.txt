@@ -9,3 +9,7 @@ fastf1
 pandas
 numpy
 scikit-learn
+whisperx
+pytest
+google-genai
+joblib==1.3.2
