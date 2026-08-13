@@ -34,6 +34,6 @@ class Settings(BaseSettings):
     intercept_cl_threshold: float = 80.0
     intercept_braking_threshold: float = 0.8  # brake pressure 0-1
     
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 
 settings = Settings()

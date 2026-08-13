@@ -18,7 +18,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from routes import telemetry, circuit, prediction
+from routes import telemetry, circuit, prediction, radio
 
 @app.get("/health")
 async def health_check():
@@ -27,3 +27,4 @@ async def health_check():
 app.include_router(telemetry.router)
 app.include_router(circuit.router)
 app.include_router(prediction.router)
+app.include_router(radio.router)
