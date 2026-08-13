@@ -111,7 +111,7 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
             {l1Config.map((c, i) => (
               <div
                 key={`l1-${i}`}
-                ref={(el) => (l1Refs.current[i] = el)}
+                ref={(el) => { l1Refs.current[i] = el; }}
                 className="flex-1 w-full scale-y-[1.05]"
                 style={{ backgroundColor: c.color, transform: 'translateX(-200vmax)' }}
               />
@@ -123,7 +123,7 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
             {l2Config.map((c, i) => (
               <div
                 key={`l2-${i}`}
-                ref={(el) => (l2Refs.current[i] = el)}
+                ref={(el) => { l2Refs.current[i] = el; }}
                 className={`absolute ${c.shadow}`}
                 style={{ 
                   top: c.top, left: c.left, width: c.width, height: c.height, 
@@ -139,7 +139,7 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
             {l3Config.map((c, i) => (
               <div
                 key={`l3-${i}`}
-                ref={(el) => (l3Refs.current[i] = el)}
+                ref={(el) => { l3Refs.current[i] = el; }}
                 className={`absolute ${c.shadow}`}
                 style={{ 
                   top: c.top, left: c.left, width: c.width, height: c.height, 

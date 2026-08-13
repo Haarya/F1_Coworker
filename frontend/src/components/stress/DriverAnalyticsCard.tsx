@@ -7,7 +7,7 @@ export default function DriverAnalyticsCard() {
   const { state } = useRaceSession();
   
   // Use React Query to fetch backend telemetry laps
-  const { data: laps, isLoading: isLapsLoading, isError: isLapsError } = useTelemetryLaps(
+  const { isLoading: isLapsLoading, isError: isLapsError } = useTelemetryLaps(
     state.selectedYear!,
     state.selectedCircuit!,
     state.selectedDriver!

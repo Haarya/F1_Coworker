@@ -23,7 +23,7 @@ export default function CircuitMapCard() {
   const [isProlongedLoad, setIsProlongedLoad] = useState(false);
 
   useEffect(() => {
-    let timeout: NodeJS.Timeout;
+    let timeout: ReturnType<typeof setTimeout>;
     if (isLoading) {
       timeout = setTimeout(() => {
         setIsProlongedLoad(true);
