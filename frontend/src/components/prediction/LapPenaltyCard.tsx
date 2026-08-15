@@ -1,6 +1,6 @@
 import { useRaceSession } from '../../context/RaceSessionContext';
 import { useTelemetryLaps, useDriverStress, useLapPenaltyMutation } from '../../hooks/useApi';
-import { AlertTriangle, TrendingUp } from 'lucide-react';
+import { TrendingUp, AlertTriangle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 export default function LapPenaltyCard() {
@@ -59,12 +59,37 @@ export default function LapPenaltyCard() {
         </span>
       </div>
 
-      <div className="flex-1 flex flex-col justify-center items-center gap-2 min-h-0 pt-14 pb-2 px-2 opacity-50">
-        <AlertTriangle size={24} className="text-white/30" />
-        <span className="text-[10px] text-white/50 uppercase tracking-widest font-mono text-center">
-          Awaiting Penalty<br/>Model Data
-        </span>
-      </div>
+      {prediction ? (
+        <div className="flex-1 flex flex-col justify-center gap-2 min-h-0 pt-14 pb-2 px-2">
+          {/* Top row: Prob & Delta */}
+          <div className="flex-1 flex items-stretch justify-center gap-3 w-full">
+            <div className="flex-1 h-full bg-[#050505] border border-white/5 rounded-xl p-2 flex flex-col items-center justify-center relative overflow-hidden group">
+              <div className="absolute inset-0 bg-[var(--theme-10)] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="text-[9px] text-white/50 mb-1 uppercase tracking-widest text-center font-bold">Probability</div>
+              <div className="text-2xl xl:text-3xl font-f1 font-black text-[var(--theme-base)] drop-shadow-[0_0_10px_var(--theme-50)] mt-1 relative z-10 tracking-tighter">
+                {(prediction.probability * 100).toFixed(0)}%
+              </div>
+            </div>
+            
+            <div className="flex-1 h-full bg-[#050505] border border-white/5 rounded-xl p-2 flex flex-col items-center justify-center relative overflow-hidden group">
+              <div className="absolute inset-0 bg-[var(--theme-10)] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="text-[9px] text-white/50 mb-1 uppercase tracking-widest text-center font-bold">
+                 Predicted Delay
+              </div>
+              <div className="text-2xl xl:text-3xl font-f1 font-black text-[var(--theme-base)] drop-shadow-[0_0_10px_var(--theme-50)] mt-1 relative z-10 tracking-tighter">
+                +{prediction.delta_seconds.toFixed(2)}s
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1 flex flex-col justify-center items-center gap-2 min-h-0 pt-14 pb-2 px-2 opacity-50">
+          <AlertTriangle size={24} className="text-white/30" />
+          <span className="text-[10px] text-white/50 uppercase tracking-widest font-mono text-center">
+            Awaiting Penalty<br/>Model Data
+          </span>
+        </div>
+      )}
     </div>
   );
 }

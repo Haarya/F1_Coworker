@@ -13,14 +13,14 @@ export default function Sidebar() {
   const years = Array.from({ length: currentYear - 2009 }, (_, i) => currentYear - i);
   const sessions = ['Practice', 'Qualifying', 'Main Race'];
 
-  const isExecutionReady = state.selectedDriver && state.selectedCircuit && state.selectedYear && state.selectedSession;
+  const isExecutionReady = state.selectedDriver && state.selectedCircuit && state.selectedYear && state.selectedSession && state.selectedAudio;
   
   const [activeItem, setActiveItem] = useState(location.pathname === '/' ? '/dashboard' : location.pathname);
 
   // Keep activeItem synced with route changes (e.g. browser back button or clicking links)
   useEffect(() => {
     const path = location.pathname === '/' ? '/dashboard' : location.pathname;
-    if (['/dashboard', '/drivers', '/circuits'].includes(path)) {
+    if (['/dashboard', '/drivers', '/circuits', '/audio'].includes(path)) {
       setActiveItem(path);
     }
   }, [location.pathname]);
@@ -30,9 +30,9 @@ export default function Sidebar() {
     return (
       <motion.div 
         layoutId="sidebar-active"
-        className="absolute inset-0 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-[0_4px_20px_rgba(0,0,0,0.2)] z-0"
+        className="absolute inset-0 bg-white/15 rounded-xl border border-white/20 shadow-[0_4px_20px_rgba(0,0,0,0.2)] z-0"
         initial={false}
-        transition={{ type: "spring", stiffness: 200, damping: 22, mass: 0.8 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30, mass: 1 }}
       />
     );
   };
@@ -94,6 +94,12 @@ export default function Sidebar() {
               <img src="/Icons/icon_session.png" alt="Session" className={`w-6 h-6 object-contain invert transition-all relative z-10 ${activeItem === 'session' ? 'opacity-100 drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]' : 'opacity-40 group-hover:opacity-100 group-hover:drop-shadow-[0_0_10px_rgba(230,0,18,1)]'}`} />
             </button>
           </div>
+
+          <Link to="/audio" onClick={() => setActiveItem('/audio')} className="group relative w-12 h-12 flex-shrink-0 flex items-center justify-center cursor-pointer transition-all">
+            {renderActiveIndicator('/audio')}
+            <div className="absolute inset-0 bg-[#E60012]/10 rounded-xl scale-0 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_15px_rgba(230,0,18,0.4)] z-0"></div>
+            <img src="/Icons/icon_audio.svg" alt="Audio" className={`w-6 h-6 object-contain transition-all relative z-10 ${activeItem === '/audio' ? 'opacity-100 drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]' : 'opacity-40 group-hover:opacity-100 group-hover:drop-shadow-[0_0_10px_rgba(230,0,18,1)]'}`} />
+          </Link>
         </div>
 
         {/* Bottom Section: F1 Button */}

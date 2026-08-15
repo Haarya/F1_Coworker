@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useRef, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useRef, useState, useCallback, useMemo, startTransition } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 
@@ -58,40 +58,54 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
     contextSafe((onCover: () => void) => {
       setIsTransitioning(true);
 
+      const l1Nodes = l1Refs.current.filter(Boolean);
+      const l2Nodes = l2Refs.current.filter(Boolean);
+      const l3Nodes = l3Refs.current.filter(Boolean);
+
       const tl = gsap.timeline({
         onComplete: () => {
           setIsTransitioning(false);
         }
       });
 
-      // Initial off-screen positions (parallax start points Top-Left)
-      gsap.set(l1Refs.current, { x: "-200vmax" });
-      gsap.set(l2Refs.current, { x: "-250vmax" });
-      gsap.set(l3Refs.current, { x: "-300vmax" });
+      // Hardware accelerated initial positions & GPU layer promotion
+      const allNodes = [...l1Nodes, ...l2Nodes, ...l3Nodes];
+      gsap.set(allNodes, { 
+        force3D: true, 
+        willChange: 'transform',
+        backfaceVisibility: 'hidden'
+      });
+      gsap.set(l1Nodes, { x: "-200vmax" });
+      gsap.set(l2Nodes, { x: "-250vmax" });
+      gsap.set(l3Nodes, { x: "-300vmax" });
 
       tl.addLabel("in", 0);
       
       // Phase 1: The Sweep In (Top-Left -> Center)
       // Wave cascade in, slamming the brakes at the apex (expo.out)
-      tl.to(l1Refs.current, { x: 0, stagger: { amount: 0.8, from: "start" }, duration: 1.0, ease: 'expo.out' }, "in");
-      tl.to(l2Refs.current, { x: 0, stagger: { amount: 0.8, from: "start" }, duration: 1.2, ease: 'expo.out' }, "in");
-      tl.to(l3Refs.current, { x: 0, stagger: { amount: 0.8, from: "start" }, duration: 1.4, ease: 'expo.out' }, "in");
+      tl.to(l1Nodes, { x: 0, stagger: { amount: 0.8, from: "start" }, duration: 1.0, ease: 'expo.out', force3D: true }, "in");
+      tl.to(l2Nodes, { x: 0, stagger: { amount: 0.8, from: "start" }, duration: 1.2, ease: 'expo.out', force3D: true }, "in");
+      tl.to(l3Nodes, { x: 0, stagger: { amount: 0.8, from: "start" }, duration: 1.4, ease: 'expo.out', force3D: true }, "in");
 
-      // Phase 2: The Freeze-Frame Hold (Peak density occurs at 1.4s + 0.8s stagger = 2.2s)
+      // Phase 2: Instant Apex Swap (Zero holding time, non-blocking RAF + startTransition)
       const peakTime = 2.2; 
       
-      // Execute the DOM swap precisely during the hold
-      tl.call(onCover, undefined, peakTime + 0.1);
+      tl.call(() => {
+        requestAnimationFrame(() => {
+          startTransition(() => {
+            onCover();
+          });
+        });
+      }, undefined, peakTime);
 
-      // Add a 200ms visual hold before peeling away
-      const outTime = peakTime + 0.2;
+      const outTime = peakTime;
       tl.addLabel("out", outTime);
       
       // Phase 3: The Sweep Out (Center -> Bottom-Right)
       // Accelerate smoothly out of the apex off to the bottom right (expo.in)
-      tl.to(l1Refs.current, { x: "200vmax", stagger: { amount: 0.5, from: "start" }, duration: 0.8, ease: 'expo.in' }, "out");
-      tl.to(l2Refs.current, { x: "250vmax", stagger: { amount: 0.5, from: "start" }, duration: 1.0, ease: 'expo.in' }, "out");
-      tl.to(l3Refs.current, { x: "300vmax", stagger: { amount: 0.5, from: "start" }, duration: 1.2, ease: 'expo.in' }, "out");
+      tl.to(l1Nodes, { x: "200vmax", stagger: { amount: 0.5, from: "start" }, duration: 0.8, ease: 'expo.in', force3D: true }, "out");
+      tl.to(l2Nodes, { x: "250vmax", stagger: { amount: 0.5, from: "start" }, duration: 1.0, ease: 'expo.in', force3D: true }, "out");
+      tl.to(l3Nodes, { x: "300vmax", stagger: { amount: 0.5, from: "start" }, duration: 1.2, ease: 'expo.in', force3D: true }, "out");
     }),
     []
   );
@@ -103,23 +117,37 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
       <div 
         ref={containerRef}
         className={`fixed inset-0 z-[9999] pointer-events-none flex items-center justify-center overflow-hidden ${isTransitioning ? 'visible' : 'hidden'}`}
+        style={{ 
+          isolation: 'isolate', 
+          transform: 'translateZ(0)',
+          transformStyle: 'preserve-3d',
+          willChange: 'transform' 
+        }}
       >
-        <div className="w-[200vmax] h-[200vmax] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45">
+        <div 
+          className="w-[200vmax] h-[200vmax] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45"
+          style={{ transformStyle: 'preserve-3d' }}
+        >
           
           {/* Layer 1 (The Foundation: 20% of structural weight) */}
-          <div className="absolute inset-0 flex flex-col z-10">
+          <div className="absolute inset-0 flex flex-col z-10" style={{ transformStyle: 'preserve-3d' }}>
             {l1Config.map((c, i) => (
               <div
                 key={`l1-${i}`}
                 ref={(el) => { l1Refs.current[i] = el; }}
                 className="flex-1 w-full scale-y-[1.05]"
-                style={{ backgroundColor: c.color, transform: 'translateX(-200vmax)' }}
+                style={{ 
+                  backgroundColor: c.color, 
+                  transform: 'translate3d(-200vmax, 0, 0)', 
+                  willChange: 'transform',
+                  backfaceVisibility: 'hidden'
+                }}
               />
             ))}
           </div>
 
           {/* Layer 2 (The Matrix: 50% dynamic interlocking strips) */}
-          <div className="absolute inset-0 z-20">
+          <div className="absolute inset-0 z-20" style={{ transformStyle: 'preserve-3d' }}>
             {l2Config.map((c, i) => (
               <div
                 key={`l2-${i}`}
@@ -128,14 +156,16 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
                 style={{ 
                   top: c.top, left: c.left, width: c.width, height: c.height, 
                   backgroundColor: c.color, clipPath: c.clipPath,
-                  transform: 'translateX(-250vmax)' 
+                  transform: 'translate3d(-250vmax, 0, 0)',
+                  willChange: 'transform',
+                  backfaceVisibility: 'hidden'
                 }}
               />
             ))}
           </div>
 
           {/* Layer 3 (The Micro-Details: 30% hyper-fast thin lines) */}
-          <div className="absolute inset-0 z-50">
+          <div className="absolute inset-0 z-50" style={{ transformStyle: 'preserve-3d' }}>
             {l3Config.map((c, i) => (
               <div
                 key={`l3-${i}`}
@@ -144,7 +174,9 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
                 style={{ 
                   top: c.top, left: c.left, width: c.width, height: c.height, 
                   backgroundColor: c.color, clipPath: c.clipPath,
-                  transform: 'translateX(-300vmax)' 
+                  transform: 'translate3d(-300vmax, 0, 0)',
+                  willChange: 'transform',
+                  backfaceVisibility: 'hidden'
                 }}
               />
             ))}

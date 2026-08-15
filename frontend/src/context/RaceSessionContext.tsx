@@ -37,6 +37,7 @@ interface RaceSessionState {
   selectedCircuit: string | null;
   selectedYear: number | null;
   selectedSession: string | null;
+  selectedAudio: string | null;
   isExecuting: boolean;
 }
 
@@ -51,6 +52,7 @@ type RaceSessionAction =
   | { type: 'SET_SELECTED_CIRCUIT'; payload: string }
   | { type: 'SET_SELECTED_YEAR'; payload: number }
   | { type: 'SET_SELECTED_SESSION'; payload: string }
+  | { type: 'SET_SELECTED_AUDIO'; payload: string }
   | { type: 'START_EXECUTION' }
   | { type: 'LOAD_REAL_DATA'; payload: { telemetry: TelemetryPoint[], radio: RadioEvent[] } };
 
@@ -88,6 +90,7 @@ const initialState: RaceSessionState = {
   selectedCircuit: '/Images/F1_circuit/Monaco_Circuit.avif',
   selectedYear: 2024,
   selectedSession: 'Main Race',
+  selectedAudio: 'Audio File 1',
   isExecuting: false,
 };
 
@@ -105,6 +108,7 @@ function reducer(state: RaceSessionState, action: RaceSessionAction): RaceSessio
     case 'SET_SELECTED_CIRCUIT': return { ...state, selectedCircuit: action.payload };
     case 'SET_SELECTED_YEAR': return { ...state, selectedYear: action.payload };
     case 'SET_SELECTED_SESSION': return { ...state, selectedSession: action.payload };
+    case 'SET_SELECTED_AUDIO': return { ...state, selectedAudio: action.payload };
     case 'START_EXECUTION': return { ...state, isExecuting: true };
     case 'LOAD_REAL_DATA': 
       return { 

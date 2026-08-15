@@ -77,6 +77,24 @@ body {
   background: #555; 
 }
 
+/* Custom thick scrollbar specifically for transcript terminal */
+.scrollbar-thick::-webkit-scrollbar {
+  width: 14px;
+}
+.scrollbar-thick::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 7px;
+  border: 3px solid #141414;
+}
+.scrollbar-thick::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+.scrollbar-thick::-webkit-scrollbar-track {
+  background: #1a1a1a;
+  border-radius: 7px;
+  border: 3px solid #141414;
+}
+
 @keyframes shimmer {
   100% {
     transform: translateX(100%);
