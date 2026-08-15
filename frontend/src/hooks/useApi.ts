@@ -9,6 +9,14 @@ export const useDriverStress = (audioId: string = "sample_radio") => {
   });
 };
 
+export const useRadioEvents = (driverId: string, gp: string, enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ['radio-events', driverId, gp],
+    queryFn: () => ApiClient.getRadioEvents(driverId, gp),
+    enabled: enabled && !!driverId && !!gp,
+  });
+};
+
 export const useTelemetryLaps = (year: number, gp: string, driver: string) => {
   return useQuery({
     queryKey: ['telemetry-laps', year, gp, driver],

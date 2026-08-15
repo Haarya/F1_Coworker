@@ -1,225 +1,75 @@
+import json
 import os
+import gc
+import torch
+import librosa
 import sys
-from dotenv import load_dotenv
-load_dotenv()
+
+# Add parent dir to path so we can import pipelines
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pandas as pd
-import numpy as np
-import fastf1
-import asyncio
-import io
-import argparse
-import librosa
-from datasets import load_dataset, Audio
+from pipelines.audio_diarization import DiarizationPipeline
 from pipelines.stress_analysis import analyze_stress
-from pipelines.cognitive_gforce import compute_lateral_g, compute_psychological_frustration
-from schemas.telemetry import TelemetryPoint
-from config import settings
 
-def append_to_csv(data_chunk, filepath):
-    if not data_chunk:
-        return
-    df = pd.DataFrame(data_chunk)
-    write_header = not os.path.exists(filepath)
-    df.to_csv(filepath, mode='a', index=False, header=write_header)
-
-async def main(max_clips: int):
-    print("Initializing F1 Telemetry Cache...")
-    cache_dir = str(settings.fastf1_cache_dir)
-    os.makedirs(cache_dir, exist_ok=True)
-    fastf1.Cache.enable_cache(cache_dir)
-    
-    print("Loading Hugging Face Dataset (MikCil/f1-team-radio)...")
-    
-    print("Loading Hugging Face Dataset (MikCil/f1-team-radio)...")
+def main():
+    # In a real environment, this would pull from the Hugging Face F1 dataset.
+    # For now, we simulate processing the `sample_radio.mp3` file.
     hf_token = os.getenv("HF_TOKEN")
     if not hf_token:
-        print("Error: HF_TOKEN not found in environment.")
+        print("WARNING: HF_TOKEN not set, Pyannote will fail. Please set it before running for real.")
+        
+    print("Starting F1 Training Data Generator Pipeline...")
+    diarizer = DiarizationPipeline()
+    
+    # Process the sample radio clip
+    audio_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "sample_radio.mp3")
+    if not os.path.exists(audio_path):
+        print(f"Audio not found at {audio_path}")
         return
         
-    dataset = load_dataset(settings.dataset_name, split="train", streaming=True, token=hf_token)
-    dataset = dataset.cast_column("audio", Audio(decode=False))
-    
-    training_data = []
-    loaded_sessions = {}
-    loaded_telemetry = {}
-    
-    print(f"Processing up to {max_clips} audio clips...")
-    count = 0
-    AUDIO_OFFSET_SECONDS = 7
-    
-    for item in dataset:
-        if count >= max_clips:
-            break
+    try:
+        labeled_segments = diarizer.process_audio(audio_path, hf_token, device="cuda", compute_type="int8")
+        
+        # Filter for Driver segments
+        driver_segments = [s for s in labeled_segments if s.get("speaker_label") == "Driver"]
+        
+        results = []
+        for idx, seg in enumerate(driver_segments):
+            start = seg.get("start", 0)
+            end = seg.get("end", 0)
+            text = seg.get("text", "")
             
-        try:
-            # Extract metadata
-            race_name = item.get('grand_prix')
-            year_str = item.get('session_date', '')[:4]
-            racing_number = item.get('racing_number')
-            message_timestamp = item.get('message_timestamp')
+            # Crop audio for just the driver segment
+            audio_array, sr = librosa.load(audio_path, sr=16000, mono=True, offset=start, duration=(end - start))
             
-            if not race_name or not year_str or not racing_number or not message_timestamp:
-                continue
-                
-            year = int(year_str)
-            session_key = f"{year}_{race_name}"
+            # Analyze stress
+            stress_result = analyze_stress(audio_array, sr)
             
-            # Load FastF1 session dynamically if not cached
-            if session_key not in loaded_sessions:
-                print(f"Loading FastF1 Session for {year} {race_name}...")
-                session = fastf1.get_session(year, race_name, 'R')
-                session.load(telemetry=True, laps=True, weather=False)
-                loaded_sessions[session_key] = session
-            else:
-                session = loaded_sessions[session_key]
-                
-            if racing_number not in session.drivers:
-                continue
-                
-            # Manually decode raw bytes using librosa to avoid torchcodec/FFmpeg Windows hell
-            raw_bytes = item['audio']['bytes']
-            audio_array, sampling_rate = librosa.load(io.BytesIO(raw_bytes), sr=16000)
+            results.append({
+                "id": f"VER_TEST_{idx}",
+                "timestamp": int(start * 10), # scale to match telemetry timeline conceptually
+                "lapNumber": 1,
+                "transcript": f"[Driver]: {text.strip()}",
+                "cognitiveLoad": stress_result["cognitive_load"],
+                "emotions": stress_result["emotions"]
+            })
             
-            # 1. Run ML Emotion Analysis
-            stress_result = await analyze_stress(audio_array, sampling_rate)
-            stress_score = stress_result.cognitive_load
+            # Critical VRAM Management for 6GB RTX 4050
+            del audio_array
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
             
-            # 2. Extract UTC Time and apply offset
-            clip_time_utc = pd.to_datetime(message_timestamp, utc=True) + pd.Timedelta(seconds=AUDIO_OFFSET_SECONDS)
+        # Write to JSON
+        data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+        os.makedirs(data_dir, exist_ok=True)
+        with open(os.path.join(data_dir, "radio_ml_database.json"), "w") as f:
+            json.dump({"VER": results}, f, indent=2)
             
-            # 3. Find Exact Telemetry
-            session_key_driver = f"{year}_{race_name}_{racing_number}"
-            if session_key_driver not in loaded_telemetry:
-                try:
-                    loaded_telemetry[session_key_driver] = session.laps.pick_driver(racing_number).get_telemetry()
-                except Exception as e:
-                    print(f"Telemetry missing for {racing_number}: {e}")
-                    continue
-                    
-            car_data = loaded_telemetry[session_key_driver]
-            if car_data is None or car_data.empty:
-                continue
-                
-            if 'Date' not in car_data.columns:
-                continue
-
-            # Ensure Date column is timezone aware to compare with clip_time_utc
-            if car_data['Date'].dt.tz is None:
-                car_data['Date'] = car_data['Date'].dt.tz_localize('UTC')
-                
-            # Find the closest telemetry row
-            time_diffs = abs(car_data['Date'] - clip_time_utc)
-            if time_diffs.min() > pd.Timedelta(minutes=5):
-                continue # Clip time is too far from any telemetry
-                
-            closest_idx_label = time_diffs.idxmin()
-            closest_iloc = car_data.index.get_loc(closest_idx_label)
-            point = car_data.iloc[closest_iloc]
-            
-            # 4. Calculate lap time penalty (delta_seconds)
-            driver_laps = session.laps.pick_driver(racing_number)
-            valid_laps = driver_laps[driver_laps['LapTime'].notna()]
-            if len(valid_laps) == 0:
-                continue
-                
-            # Find which lap this point belongs to using 'Time' (timedelta)
-            point_time_td = point['Time']
-            current_lap = None
-            for _, lap in valid_laps.iterrows():
-                if lap['LapStartTime'] <= point_time_td <= lap['Time']:
-                    current_lap = lap
-                    break
-                    
-            if current_lap is None:
-                # Fallback to random lap if timestamp was during pits/flags
-                current_lap = valid_laps.sample(1).iloc[0]
-                
-            avg_lap_time = valid_laps['LapTime'].mean().total_seconds()
-            this_lap_time = current_lap['LapTime'].total_seconds()
-            delta = max(0, this_lap_time - avg_lap_time)
-            
-            # 5. Calculate true physics features
-            # Compute Lap Progress
-            lap_dur = current_lap['LapTime'].total_seconds()
-            if lap_dur > 0:
-                lap_prog = (point_time_td.total_seconds() - current_lap['LapStartTime'].total_seconds()) / lap_dur
-            else:
-                lap_prog = 0.5
-            lap_prog = max(0.0, min(1.0, lap_prog))
-            
-            # Compute G-Lat using 5-point window
-            window_start = max(0, closest_iloc - 2)
-            window_end = min(len(car_data), closest_iloc + 3)
-            window_df = car_data.iloc[window_start:window_end]
-            
-            telemetry_points = []
-            for _, r in window_df.iterrows():
-                telemetry_points.append(TelemetryPoint(
-                    time=r['Time'].total_seconds(),
-                    speed=float(r['Speed']),
-                    throttle=float(r['Throttle']),
-                    brake=float(r['Brake']),
-                    rpm=float(r['RPM']),
-                    x=float(r['X']),
-                    y=float(r['Y']),
-                    gear=int(r['nGear'])
-                ))
-                
-            g_lat_values = compute_lateral_g(telemetry_points, window_size=5)
-            g_lat = g_lat_values[len(g_lat_values)//2] if g_lat_values else 0.0
-            
-            # Compute true psychological frustration
-            s_psych = compute_psychological_frustration(stress_result.cognitive_load, g_lat)
-            
-            tyre_compound = str(current_lap.get('Compound', 'UNKNOWN'))
-            tyre_life = current_lap.get('TyreLife', 1.0)
-            if pd.isna(tyre_life): tyre_life = 1.0
-            
-            track_status = str(current_lap.get('TrackStatus', '1'))
-            
-            row = {
-                "race_id": session_key,
-                "cognitive_load": stress_result.cognitive_load,
-                "s_psych": float(s_psych),
-                "g_lat": float(g_lat),
-                "speed": float(point['Speed']),
-                "throttle": float(point['Throttle']),
-                "brake": float(point['Brake']),
-                "emotion_angry": stress_result.emotions.angry,
-                "emotion_fearful": stress_result.emotions.fearful,
-                "sector": int(pd.notna(current_lap['Sector1Time'])) + 1,
-                "lap_progress": float(lap_prog),
-                "tyre_compound": tyre_compound,
-                "tyre_life": float(tyre_life),
-                "track_status": track_status,
-                "delta_seconds": float(delta)
-            }
-            
-            training_data.append(row)
-            count += 1
-            if count % 10 == 0:
-                print(f"Processed {count}/{max_clips} clips...")
-                
-            # PERIODIC SAVE: Write every 100 clips
-            if count % 100 == 0:
-                csv_path = os.path.join(os.path.dirname(__file__), "..", "data", "real_training_data.csv")
-                os.makedirs(os.path.dirname(csv_path), exist_ok=True)
-                append_to_csv(training_data, csv_path)
-                training_data.clear() # Clear memory
-                
-        except Exception as e:
-            print(f"Skipping clip due to error: {e}")
-            continue
-
-    csv_path = os.path.join(os.path.dirname(__file__), "..", "data", "real_training_data.csv")
-    os.makedirs(os.path.dirname(csv_path), exist_ok=True)
-    append_to_csv(training_data, csv_path)
-    print(f"Dataset generation complete. Total records processed: {count}")
+        print("Dataset generated successfully!")
+        
+    except Exception as e:
+        print(f"Pipeline failed: {e}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate F1 Training Data")
-    parser.add_argument("--limit", type=int, default=2000, help="Max clips to process")
-    args = parser.parse_args()
-    asyncio.run(main(args.limit))
+    main()
