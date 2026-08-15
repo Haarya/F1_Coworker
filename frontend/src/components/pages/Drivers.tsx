@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../layout/Sidebar';
 import { useRaceSession } from '../../context/RaceSessionContext';
 
 const RAW_DRIVER_FILES = [
@@ -50,10 +49,8 @@ export default function Drivers() {
   };
 
   return (
-    <div className="h-screen w-screen bg-[#050505] overflow-hidden flex font-sans">
-      <Sidebar />
-      
-      <div className="flex-1 flex flex-col p-6 overflow-y-auto">
+    <div className="flex-1 h-full w-full bg-[#050505] overflow-hidden flex font-sans">
+      <div className="flex-1 flex flex-col p-8 overflow-y-auto">
         
         <div className="flex justify-between items-end mb-8 border-b border-white/5 pb-4">
            <div>

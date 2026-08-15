@@ -1,6 +1,6 @@
 import { useRaceSession } from '../../context/RaceSessionContext';
 import { useTelemetryLaps, useDriverStress, useLapPenaltyMutation } from '../../hooks/useApi';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, AlertTriangle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 export default function LapPenaltyCard() {
@@ -90,7 +90,6 @@ export default function LapPenaltyCard() {
           </span>
         </div>
       )}
-      </div>
     </div>
   );
 }
