@@ -6,7 +6,12 @@ import { useTelemetryLaps } from '../../hooks/useApi';
 export default function DriverAnalyticsCard() {
   const { state } = useRaceSession();
   
-  const gpName = state.selectedCircuit?.split('/').pop()?.split('_')[0] || state.gpName || 'Monaco';
+  const getCircuitName = (path: string) => {
+    if (!path) return 'Monaco';
+    const filename = path.split('/').pop() || '';
+    return filename.replace('_Circuit.avif', '').replace(/_/g, ' ').toUpperCase();
+  };
+  const gpName = getCircuitName(state.selectedCircuit || '') || state.gpName || 'Monaco';
   
   const driverMapping: Record<string, string> = {
     'Max': 'VER', 'Lewis': 'HAM', 'Charles': 'LEC', 'Sergio': 'PER',

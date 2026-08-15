@@ -6,10 +6,25 @@ import { useEffect, useState } from 'react';
 export default function LapPenaltyCard() {
   const { state } = useRaceSession();
   
+  const getCircuitName = (path: string) => {
+    if (!path) return 'Monaco';
+    const filename = path.split('/').pop() || '';
+    return filename.replace('_Circuit.avif', '').replace(/_/g, ' ').toUpperCase();
+  };
+  const gpName = getCircuitName(state.selectedCircuit || '');
+
+  const driverMapping: Record<string, string> = {
+    'Max': 'VER', 'Lewis': 'HAM', 'Charles': 'LEC', 'Sergio': 'PER',
+    'Lando': 'NOR', 'Carlos': 'SAI', 'George': 'RUS', 'Oscar': 'PIA',
+    'Fernando': 'ALO', 'Lance': 'STR'
+  };
+  const rawDriverName = state.selectedDriver?.split('/').pop()?.split('_')[0] || 'Max';
+  const driverName = driverMapping[rawDriverName] || rawDriverName;
+
   const { data: laps } = useTelemetryLaps(
     state.selectedYear!,
-    state.selectedCircuit!,
-    state.selectedDriver!
+    gpName,
+    driverName
   );
 
   const { data: stressResult } = useDriverStress("sample_radio");

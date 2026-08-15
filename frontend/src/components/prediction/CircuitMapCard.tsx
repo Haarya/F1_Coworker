@@ -45,7 +45,19 @@ export default function CircuitMapCard() {
           {/* Map Image / Loading */}
          <div className="w-full flex-1 flex items-center justify-center min-h-0">
             {state.selectedCircuit ? (
-               <img src={state.selectedCircuit} alt="Circuit Map" className="w-[95%] h-full object-contain filter invert opacity-80" />
+               <div className="relative w-full h-full flex items-center justify-center">
+                 <img src={state.selectedCircuit} alt="Circuit Map" className="w-[95%] h-full object-contain filter invert opacity-80" />
+                 {isLoading && isProlongedLoad && (
+                   <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-1 rounded border border-white/10 text-[8px] text-[var(--theme-70)] animate-pulse whitespace-nowrap">
+                     Syncing telemetry...
+                   </div>
+                 )}
+                 {isError && (
+                   <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-1 rounded border border-red-500/30 text-[8px] text-red-500 whitespace-nowrap">
+                     Telemetry sync failed
+                   </div>
+                 )}
+               </div>
             ) : (
                <div className="w-[80%] h-[80%] border border-dashed border-[var(--theme-20)] rounded-xl flex items-center justify-center bg-[var(--theme-10)]">
                   <span className="text-[var(--theme-40)] text-[10px] font-mono tracking-widest uppercase">Select Circuit</span>

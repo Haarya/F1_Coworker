@@ -4,9 +4,8 @@ from pathlib import Path
 class Settings(BaseSettings):
     # ─── Hugging Face ───
     hf_token: str = ""                                  # Required — HF User Access Token
-    whisper_model: str = "openai/whisper-large-v3"
-    emotion_model: str = "ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition"
     dataset_name: str = "MikCil/f1-team-radio"
+    sensevoice_model_dir: Path = Path("./models/sensevoice")
     
     # ─── FastF1 ───
     fastf1_cache_dir: Path = Path("./data/fastf1_cache")

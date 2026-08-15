@@ -20,8 +20,13 @@ export default function Dashboard() {
   const { state, dispatch } = useRaceSession();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Extract gpName from selectedCircuit (e.g. "/Images/F1_circuit/Monaco_Circuit.avif" -> "Monaco")
-  const gpName = state.selectedCircuit?.split('/').pop()?.split('_')[0] || state.gpName || 'Monaco';
+  // Extract gpName from selectedCircuit (e.g. "/Images/F1_circuit/Monaco_Circuit.avif" -> "MONACO")
+  const getCircuitName = (path: string) => {
+    if (!path) return 'Monaco';
+    const filename = path.split('/').pop() || '';
+    return filename.replace('_Circuit.avif', '').replace(/_/g, ' ').toUpperCase();
+  };
+  const gpName = getCircuitName(state.selectedCircuit || '') || state.gpName || 'Monaco';
   
   // Map driver names to FastF1 3-letter abbreviations
   const driverMapping: Record<string, string> = {

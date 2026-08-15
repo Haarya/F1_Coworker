@@ -2,14 +2,15 @@ fastapi==0.109.2
 uvicorn==0.27.1
 pydantic-settings==2.1.0
 torch
-transformers
+sherpa-onnx
+pyannote.audio
+onnxruntime
 librosa
 soundfile
 fastf1
 pandas
 numpy
 scikit-learn
-whisperx
 pytest
 google-genai
 joblib==1.3.2
