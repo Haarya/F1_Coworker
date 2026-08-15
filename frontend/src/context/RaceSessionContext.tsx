@@ -84,13 +84,13 @@ const initialState: RaceSessionState = {
   isAnalyzing: false,
   error: null,
 
-  // Default values so frames are filled initially
-  selectedDriver: '/Images/F1_Racers/Charles_Leclerc_E60012.png',
+  // No default selections - user must select driver, circuit, year, session, audio first
+  selectedDriver: null,
   driverGlowHex: '#E60012',
-  selectedCircuit: '/Images/F1_circuit/Monaco_Circuit.avif',
+  selectedCircuit: null,
   selectedYear: 2024,
   selectedSession: 'Main Race',
-  selectedAudio: 'Audio File 1',
+  selectedAudio: null,
   isExecuting: false,
 };
 
@@ -115,7 +115,7 @@ function reducer(state: RaceSessionState, action: RaceSessionAction): RaceSessio
         ...state, 
         telemetryStream: action.payload.telemetry, 
         radioEvents: action.payload.radio,
-        playbackTimestamp: 0 // Reset playback when loading real data
+        playbackTimestamp: action.payload.radio.length > 0 ? Math.max(0, action.payload.radio[0].timestamp - 1) : (action.payload.telemetry.length > 0 ? action.payload.telemetry[0].sessionTime : 0)
       };
     case 'TOGGLE_PLAYBACK': 
       return { 
@@ -129,11 +129,19 @@ function reducer(state: RaceSessionState, action: RaceSessionAction): RaceSessio
       const activeTelemetry = state.telemetryStream.findLast(t => t.sessionTime <= newTimestamp);
       const activeRadio = state.radioEvents.findLast(r => r.timestamp <= newTimestamp);
       
+      const lastEvent = state.radioEvents.length > 0 ? state.radioEvents[state.radioEvents.length - 1] : null;
+      const isPastLastEvent = lastEvent && newTimestamp >= lastEvent.timestamp;
+      
       let clIndex = state.currentCLIndex;
-      if (activeRadio && (newTimestamp - activeRadio.timestamp) < 5) {
+      let currentActiveEventId = null;
+
+      if (activeRadio) {
+        // Lock perfectly to the latest transcript's stress level without falling back
         clIndex = activeRadio.cognitiveLoad;
+        currentActiveEventId = activeRadio.id;
       } else if (activeTelemetry) {
-        clIndex = Math.min(100, Math.max(0, (activeTelemetry.speed / 350) * 80 + Math.random() * 20));
+        // Only fluctuate BEFORE the very first transcript appears
+        clIndex = Math.min(100, Math.max(0, (activeTelemetry.speed / 350) * 80));
       }
 
       const lapDuration = 100;
@@ -151,7 +159,7 @@ function reducer(state: RaceSessionState, action: RaceSessionAction): RaceSessio
       return { 
         ...state, 
         playbackTimestamp: newTimestamp,
-        activeEventId: activeRadio && (newTimestamp - activeRadio.timestamp) < 5 ? activeRadio.id : null,
+        activeEventId: currentActiveEventId,
         currentCLIndex: clIndex,
         currentSpeed: activeTelemetry ? activeTelemetry.speed : state.currentSpeed,
         currentThrottle: activeTelemetry ? activeTelemetry.throttle : state.currentThrottle,

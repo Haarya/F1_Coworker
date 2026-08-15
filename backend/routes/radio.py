@@ -39,11 +39,14 @@ async def get_radio_events(driver_id: str, gp: str):
             import json
             with open(db_path, "r") as f:
                 db = json.load(f)
-            # Use requested driver ID if exists, otherwise fallback to VER (our mock generated driver)
-            if driver_id in db:
-                return db[driver_id]
-            elif "VER" in db:
-                return db["VER"]
+            # Filter the flat list for the specific driver and gp
+            driver_events = [e for e in db if e.get("driver_id") == driver_id and e.get("gp", "").title() == gp.title()]
+            if driver_events:
+                for idx, event in enumerate(driver_events):
+                    event["id"] = f"{driver_id}_{idx}"
+                    if "cognitive_load" in event:
+                        event["cognitiveLoad"] = event.pop("cognitive_load")
+                return driver_events
         except Exception as e:
             print(f"Failed to read ML dataset: {e}")
             
@@ -57,4 +60,49 @@ async def get_radio_events(driver_id: str, gp: str):
             "cognitiveLoad": 35.5
         }
     ]
+
+@router.get("/stress-for-driver")
+async def get_stress_for_driver(driver_id: str):
+    """
+    Returns the latest pre-computed stress result for a driver from the DB.
+    """
+    db_path = os.path.join(os.path.dirname(__file__), "..", "data", "radio_ml_database.json")
+    if os.path.exists(db_path):
+        import json
+        with open(db_path, "r") as f:
+            db = json.load(f)
+        events = [e for e in db if e.get("driver_id") == driver_id]
+        if events:
+            # Return a formatted StressResult
+            latest = events[-1]
+            return {
+                "transcript": latest["transcript"],
+                "cognitive_load": latest["cognitive_load"],
+                "emotions": latest.get("emotions", {})
+            }
+    
+    # Fallback
+    return {
+        "transcript": "Unknown",
+        "cognitive_load": 50,
+        "emotions": {"neutral": 1.0}
+    }
+
+@router.post("/execute-pipeline")
+async def execute_pipeline():
+    """
+    Executes the ML pipeline (seeding script) as a background subprocess.
+    This fulfills the UI's 'Execute' button action.
+    """
+    import subprocess
+    import sys
+    script_path = os.path.join(os.path.dirname(__file__), "..", "scripts", "seed_demo_data.py")
+    try:
+        # Run the seed script synchronously for the demo so UI waits for it
+        result = subprocess.run([sys.executable, script_path], capture_output=True, text=True, check=True)
+        return {"status": "ok", "message": "Pipeline execution complete.", "logs": result.stdout}
+    except subprocess.CalledProcessError as e:
+        raise HTTPException(status_code=500, detail=f"Pipeline failed: {e.stderr}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 

@@ -30,35 +30,32 @@ def test_identify_speakers(mock_client_class):
     assert labeled_segments[1]["speaker_label"] == "Driver"
 
 
-@patch("whisperx.diarize.assign_word_speakers")
-@patch("whisperx.diarize.DiarizationPipeline")
-@patch("pipelines.audio_diarization.whisperx")
-@patch("librosa.load")
+@patch("pipelines.audio_diarization.Pipeline.from_pretrained")
+@patch("pipelines.audio_diarization.librosa.load")
+@patch("pipelines.audio_diarization.sensevoice_model.transcribe")
 @patch("pipelines.audio_diarization.DiarizationPipeline.llm_classify_speakers")
-def test_process_audio(mock_llm_classify, mock_librosa_load, mock_whisperx, mock_whisperx_diarize, mock_assign):
+def test_process_audio(mock_llm_classify, mock_transcribe, mock_librosa_load, mock_pipeline):
     from pipelines.audio_diarization import DiarizationPipeline
     
     # Mock librosa
     import numpy as np
-    mock_librosa_load.return_value = (np.zeros(100), 16000)
+    mock_librosa_load.return_value = (np.zeros(16000), 16000)
 
-    # Mocking WhisperX behavior
-    mock_model = MagicMock()
-    mock_whisperx.load_model.return_value = mock_model
-    mock_model.transcribe.return_value = {"segments": [{"start": 0, "end": 1, "text": " box"}], "language": "en"}
+    # Mock Pyannote Pipeline
+    mock_diarize_pipeline = MagicMock()
+    mock_pipeline.return_value = mock_diarize_pipeline
     
-    mock_align_model = MagicMock()
-    mock_whisperx.load_align_model.return_value = (mock_align_model, MagicMock())
-    mock_whisperx.align.return_value = {"segments": [{"start": 0, "end": 1, "text": " box"}]}
+    # Mock pyannote speaker diarization output
+    mock_turn = MagicMock()
+    mock_turn.start = 0.0
+    mock_turn.end = 1.0
+    mock_diarize_pipeline.return_value.itertracks.return_value = [(mock_turn, None, "SPEAKER_00")]
     
-    # Mock whisperx.diarize.DiarizationPipeline (Pyannote)
-    mock_pyannote = MagicMock()
-    mock_whisperx_diarize.return_value = mock_pyannote
-    mock_pyannote.return_value = MagicMock()
-    mock_assign.return_value = {"segments": [{"start": 0, "end": 1, "text": " box", "speaker": "SPEAKER_00"}]}
+    # Mock SenseVoice
+    mock_transcribe.return_value = ("box box", "neutral")
     
     # Mock LLM classification
-    mock_llm_classify.return_value = [{"start": 0, "end": 1, "text": " box", "speaker": "SPEAKER_00", "speaker_label": "Engineer"}]
+    mock_llm_classify.return_value = [{"start": 0.0, "end": 1.0, "text": "box box", "speaker": "SPEAKER_00", "speaker_label": "Engineer", "emotion": "neutral"}]
     
     pipeline = DiarizationPipeline()
     result = pipeline.process_audio("dummy.wav", "dummy_token")

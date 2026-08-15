@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import LiveTerminal from '../transcript/LiveTerminal';
 import LapPenaltyCard from '../prediction/LapPenaltyCard';
 import { DriverStressMeter } from '../stress/DriverStressMeter';
@@ -11,7 +11,6 @@ import ActiveInterceptOverlay from '../stress/ActiveInterceptOverlay';
 import { useRaceSession } from '../../context/RaceSessionContext';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
-import { useRef, useEffect } from 'react';
 import { useTelemetryStream, useRadioEvents } from '../../hooks/useApi';
 
 export default function Dashboard() {
@@ -20,15 +19,18 @@ export default function Dashboard() {
   const { state, dispatch } = useRaceSession();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Extract gpName from selectedCircuit (e.g. "/Images/F1_circuit/Monaco_Circuit.avif" -> "MONACO")
+  // Extract gpName from selectedCircuit (e.g. "/Images/F1_circuit/Bahrain_Circuit.avif" -> "Bahrain")
+  // Must be Title Case to match FastF1 GP names and the radio DB
   const getCircuitName = (path: string) => {
-    if (!path) return 'Monaco';
+    if (!path) return 'Bahrain';
     const filename = path.split('/').pop() || '';
-    return filename.replace('_Circuit.avif', '').replace(/_/g, ' ').toUpperCase();
+    const raw = filename.replace('_Circuit.avif', '').replace(/_/g, ' ');
+    // Title-case each word
+    return raw.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
   };
-  const gpName = getCircuitName(state.selectedCircuit || '') || state.gpName || 'Monaco';
+  const gpName = getCircuitName(state.selectedCircuit || '') || state.gpName || 'Bahrain';
   
-  // Map driver names to FastF1 3-letter abbreviations
+  // Map driver image filenames to FastF1 3-letter abbreviations
   const driverMapping: Record<string, string> = {
     'Max': 'VER',
     'Lewis': 'HAM',
@@ -45,7 +47,8 @@ export default function Dashboard() {
   const rawDriverName = state.selectedDriver?.split('/').pop()?.split('_')[0] || 'Max';
   const driverName = driverMapping[rawDriverName] || rawDriverName;
 
-  const { data: telemetryData } = useTelemetryStream(
+  // Only fetch data when Execute is clicked to simulate processing delay
+  const { data: telemetryData, isLoading: isTelemetryLoading } = useTelemetryStream(
     state.selectedYear || 2024,
     gpName,
     driverName,
@@ -53,18 +56,34 @@ export default function Dashboard() {
     state.isExecuting
   );
 
-  const { data: radioData } = useRadioEvents(
+  const { data: radioData, isLoading: isRadioLoading } = useRadioEvents(
     driverName,
     gpName,
     state.isExecuting
   );
 
+  // As soon as real data loads from the API, push it into context and start playback
+  // Track whether we already loaded real data to avoid double-dispatch
+  const hasLoadedData = useRef(false);
+
+  // When Execute is clicked (isExecuting flips true) AND radio data is available, load it.
+  // Using a ref so we handle the case where radioData was already fetched before Execute was clicked.
   useEffect(() => {
-    if (state.isExecuting && telemetryData?.data && radioData && state.playbackState === 'idle') {
-      dispatch({ type: 'LOAD_REAL_DATA', payload: { telemetry: telemetryData.data, radio: radioData } });
-      dispatch({ type: 'TOGGLE_PLAYBACK' });
+    if (state.isExecuting && !hasLoadedData.current) {
+      const radio = radioData && radioData.length > 0 ? radioData : null;
+      if (radio && telemetryData) {
+        hasLoadedData.current = true;
+        const telemetry = telemetryData.data || [];
+        dispatch({ type: 'LOAD_REAL_DATA', payload: { telemetry, radio } });
+        // Auto-start playback after a short delay to let state settle
+        setTimeout(() => dispatch({ type: 'TOGGLE_PLAYBACK' }), 200);
+      }
     }
-  }, [state.isExecuting, telemetryData, radioData, state.playbackState, dispatch]);
+    // Reset if isExecuting is turned off
+    if (!state.isExecuting) {
+      hasLoadedData.current = false;
+    }
+  }, [state.isExecuting, radioData, telemetryData, dispatch]);
 
   useGSAP(() => {
     gsap.fromTo('.gsap-bento',

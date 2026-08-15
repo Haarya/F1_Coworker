@@ -2,18 +2,22 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useRaceSession } from '../../context/RaceSessionContext';
 import { motion } from 'framer-motion';
+import { ApiClient } from '../../api/client';
 
 export default function Sidebar() {
   const { state, dispatch } = useRaceSession();
   const [showYearDropdown, setShowYearDropdown] = useState(false);
   const [showSessionDropdown, setShowSessionDropdown] = useState(false);
+  const [isExecutingPipeline, _setIsExecutingPipeline] = useState(false); // kept for future use
   const location = useLocation();
 
+  // Removed useEffect for state.isExecuting to prevent race condition with React Query and page reloading
+
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: currentYear - 2009 }, (_, i) => currentYear - i);
+  const years = [2025, 2024, 2023, 2022, 2021, 2020, 2019];
   const sessions = ['Practice', 'Qualifying', 'Main Race'];
 
-  const isExecutionReady = state.selectedDriver && state.selectedCircuit && state.selectedYear && state.selectedSession && state.selectedAudio;
+  const isExecutionReady = state.selectedDriver && state.selectedCircuit && state.selectedYear && state.selectedSession;
   
   const [activeItem, setActiveItem] = useState(location.pathname === '/' ? '/dashboard' : location.pathname);
 

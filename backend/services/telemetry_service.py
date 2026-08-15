@@ -15,6 +15,7 @@ class TelemetryService:
     @classmethod
     def get_session(cls, year: int, gp: str, session_type: str = 'R'):
         cls.enable_cache()
+        gp = gp.title() # Normalize frontend uppercase to FastF1 expected title case
         session = fastf1.get_session(year, gp, session_type)
         session.load(telemetry=True, laps=True, weather=False)
         return session
@@ -56,7 +57,7 @@ class TelemetryService:
         points = []
         for _, row in telemetry.iterrows():
             points.append(TelemetryPoint(
-                time=row['Time'].total_seconds() if hasattr(row['Time'], 'total_seconds') else 0.0,
+                sessionTime=row['Time'].total_seconds() if hasattr(row['Time'], 'total_seconds') else 0.0,
                 speed=float(row['Speed']),
                 throttle=float(row['Throttle']),
                 brake=float(row['Brake']),

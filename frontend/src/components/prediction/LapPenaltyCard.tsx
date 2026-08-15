@@ -1,5 +1,5 @@
 import { useRaceSession } from '../../context/RaceSessionContext';
-import { useTelemetryLaps, useDriverStress, useLapPenaltyMutation } from '../../hooks/useApi';
+import { useLapPenaltyMutation } from '../../hooks/useApi';
 import { TrendingUp, AlertTriangle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -7,9 +7,10 @@ export default function LapPenaltyCard() {
   const { state } = useRaceSession();
   
   const getCircuitName = (path: string) => {
-    if (!path) return 'Monaco';
+    if (!path) return 'Bahrain';
     const filename = path.split('/').pop() || '';
-    return filename.replace('_Circuit.avif', '').replace(/_/g, ' ').toUpperCase();
+    const raw = filename.replace('_Circuit.avif', '').replace(/_/g, ' ');
+    return raw.replace(/\w\S*/g, (w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
   };
   const gpName = getCircuitName(state.selectedCircuit || '');
 
@@ -21,40 +22,50 @@ export default function LapPenaltyCard() {
   const rawDriverName = state.selectedDriver?.split('/').pop()?.split('_')[0] || 'Max';
   const driverName = driverMapping[rawDriverName] || rawDriverName;
 
-  const { data: laps } = useTelemetryLaps(
-    state.selectedYear!,
-    gpName,
-    driverName
-  );
+  // Removed useTelemetryLaps to avoid Ergast blocking
 
-  const { data: stressResult } = useDriverStress("sample_radio");
+  // Use the active radio event or latest available from state.radioEvents
+  const activeRadio = state.activeEventId 
+    ? state.radioEvents.find(e => e.id === state.activeEventId) 
+    : (state.radioEvents.length > 0 ? state.radioEvents[state.radioEvents.length - 1] : null);
   
   const lapPenaltyMutation = useLapPenaltyMutation();
   const [prediction, setPrediction] = useState<{probability: number, delta_seconds: number, sector: number} | null>(null);
 
   useEffect(() => {
-    if (stressResult) {
-      // Build features object to send to the backend
-      const latestLap = laps && laps.length > 0 ? laps[laps.length - 1] : null;
+    console.log('[LapPenaltyCard] useEffect triggered', { activeRadio, isExecuting: state.isExecuting });
+    // Only send prediction when real data is loaded (Execute was clicked)
+    if (activeRadio && state.isExecuting) {
+      const latestLap = null; // Removed laps dependency
+      console.log('[LapPenaltyCard] Executing mutation');
       
       const features = {
-        cognitive_load: stressResult.cognitive_load,
-        emotion_angry: stressResult.emotions?.angry || 0,
-        emotion_fearful: stressResult.emotions?.fearful || 0,
-        speed: latestLap?.Speed || 200,
-        throttle: latestLap?.Throttle || 80,
-        brake: latestLap?.Brake || 0,
+        cognitive_load: activeRadio.cognitiveLoad || (activeRadio as any).cognitive_load || 50,
+        s_psych: ((activeRadio.cognitiveLoad || 50) / 100) * 2,  // derived stress index
+        emotion_angry: activeRadio.emotions?.angry || 0,
+        emotion_fearful: activeRadio.emotions?.fearful || 0,
+        speed: latestLap?.lap_time ? 200 : 200,
+        throttle: 80,
+        brake: 0,
         g_lat: 1.5,
-        sector: latestLap?.Sector1Time ? (latestLap?.Sector2Time ? 3 : 2) : 1
+        sector: 2,
+        lap_progress: 0.5,
+        tyre_life: 15,
+        tyre_compound: 'MEDIUM',
+        track_status: '1'
       };
 
       lapPenaltyMutation.mutate(features, {
         onSuccess: (data) => {
+          console.log('[LapPenaltyCard] Mutation Success', data);
           setPrediction(data);
+        },
+        onError: (err) => {
+          console.error('[LapPenaltyCard] Mutation Error', err);
         }
       });
     }
-  }, [stressResult, laps]);
+  }, [activeRadio, state.isExecuting]);
   
   const probability = prediction ? prediction.probability : 0.05;
   

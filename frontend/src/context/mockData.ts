@@ -18,64 +18,52 @@ export const MOCK_TELEMETRY: TelemetryPoint[] = Array.from({ length: 200 }).map(
   };
 });
 
-// Generate 5 realistic radio events
-export const MOCK_RADIO_EVENTS: RadioEvent[] = [
-  {
-    id: 'evt-1',
-    timestamp: 15.0,
-    driverId: 'VER',
-    transcript: "Yeah, the rears are getting a bit warm in turn 3.",
-    emotions: { angry: 0.1, fearful: 0.0, sad: 0.0, happy: 0.0, surprised: 0.1, neutral: 0.8, disgust: 0.0 },
-    cognitiveLoad: 35,
-    audioUrl: '',
-    lapNumber: 1,
-    sector: 1
-  },
-  {
-    id: 'evt-2',
-    timestamp: 35.5,
-    driverId: 'VER',
-    transcript: "Mate, I have absolutely no grip! What is going on?",
-    emotions: { angry: 0.7, fearful: 0.1, sad: 0.0, happy: 0.0, surprised: 0.1, neutral: 0.1, disgust: 0.0 },
-    cognitiveLoad: 78,
-    audioUrl: '',
-    lapNumber: 1,
-    sector: 2
-  },
-  {
-    id: 'evt-3',
-    timestamp: 45.0,
-    driverId: 'GP',
-    transcript: "Understood Max. Strat 5, switch strat 5.",
-    emotions: { angry: 0.0, fearful: 0.0, sad: 0.0, happy: 0.0, surprised: 0.0, neutral: 1.0, disgust: 0.0 },
-    cognitiveLoad: 10,
-    audioUrl: '',
-    lapNumber: 1,
-    sector: 2
-  },
-  {
-    id: 'evt-4',
-    timestamp: 70.2,
-    driverId: 'VER',
-    transcript: "I can't keep this pace up, the tyres are done!",
-    emotions: { angry: 0.8, fearful: 0.2, sad: 0.0, happy: 0.0, surprised: 0.0, neutral: 0.0, disgust: 0.0 },
-    cognitiveLoad: 88,
-    audioUrl: '',
-    lapNumber: 1,
-    sector: 3
-  },
-  {
-    id: 'evt-5',
-    timestamp: 95.0,
-    driverId: 'VER',
-    transcript: "Okay, balancing is a bit better now.",
-    emotions: { angry: 0.0, fearful: 0.0, sad: 0.0, happy: 0.2, surprised: 0.0, neutral: 0.8, disgust: 0.0 },
-    cognitiveLoad: 25,
-    audioUrl: '',
-    lapNumber: 2,
-    sector: 1
-  }
+export const MOCK_RADIO_EVENTS_VER: RadioEvent[] = [
+  { id: 'evt-1', timestamp: 15.0, driverId: 'VER', transcript: "Mate, I have absolutely no grip! What is going on?", emotions: { angry: 0.7, fearful: 0.1, sad: 0.0, happy: 0.0, surprised: 0.1, neutral: 0.1, disgust: 0.0 }, cognitiveLoad: 88, audioUrl: '', lapNumber: 1, sector: 2 },
+  { id: 'evt-2', timestamp: 25.5, driverId: 'VER', transcript: "Yeah, the rears are getting a bit warm in turn 3.", emotions: { angry: 0.1, fearful: 0.0, sad: 0.0, happy: 0.0, surprised: 0.1, neutral: 0.8, disgust: 0.0 }, cognitiveLoad: 35, audioUrl: '', lapNumber: 1, sector: 1 },
+  { id: 'evt-3', timestamp: 45.0, driverId: 'GP', transcript: "Understood Max. Strat 5, switch strat 5.", emotions: { angry: 0.0, fearful: 0.0, sad: 0.0, happy: 0.0, surprised: 0.0, neutral: 1.0, disgust: 0.0 }, cognitiveLoad: 10, audioUrl: '', lapNumber: 1, sector: 2 },
+  { id: 'evt-4', timestamp: 70.2, driverId: 'VER', transcript: "I can't keep this pace up, the tyres are done!", emotions: { angry: 0.8, fearful: 0.2, sad: 0.0, happy: 0.0, surprised: 0.0, neutral: 0.0, disgust: 0.0 }, cognitiveLoad: 88, audioUrl: '', lapNumber: 1, sector: 3 },
+  { id: 'evt-5', timestamp: 95.0, driverId: 'VER', transcript: "Okay, balancing is a bit better now.", emotions: { angry: 0.0, fearful: 0.0, sad: 0.0, happy: 0.2, surprised: 0.0, neutral: 0.8, disgust: 0.0 }, cognitiveLoad: 25, audioUrl: '', lapNumber: 2, sector: 1 }
 ];
+
+export const MOCK_RADIO_EVENTS_LEC: RadioEvent[] = [
+  { id: 'evt-1', timestamp: 15.0, driverId: 'LEC', transcript: "The car is jumping around everywhere!", emotions: { angry: 0.6, fearful: 0.4, sad: 0.0, happy: 0.0, surprised: 0.0, neutral: 0.0, disgust: 0.0 }, cognitiveLoad: 85, audioUrl: '', lapNumber: 1, sector: 2 },
+  { id: 'evt-2', timestamp: 25.5, driverId: 'XAVI', transcript: "Copy that, checking the diff.", emotions: { angry: 0.0, fearful: 0.0, sad: 0.0, happy: 0.0, surprised: 0.0, neutral: 1.0, disgust: 0.0 }, cognitiveLoad: 10, audioUrl: '', lapNumber: 1, sector: 1 },
+  { id: 'evt-3', timestamp: 45.0, driverId: 'LEC', transcript: "I'm struggling with the front left, it's graining.", emotions: { angry: 0.2, fearful: 0.1, sad: 0.0, happy: 0.0, surprised: 0.0, neutral: 0.7, disgust: 0.0 }, cognitiveLoad: 60, audioUrl: '', lapNumber: 1, sector: 2 },
+  { id: 'evt-4', timestamp: 70.2, driverId: 'LEC', transcript: "No! Why did we stop?! Why?!", emotions: { angry: 0.9, fearful: 0.1, sad: 0.0, happy: 0.0, surprised: 0.0, neutral: 0.0, disgust: 0.0 }, cognitiveLoad: 95, audioUrl: '', lapNumber: 1, sector: 3 },
+  { id: 'evt-5', timestamp: 95.0, driverId: 'LEC', transcript: "Okay, head down, we keep pushing.", emotions: { angry: 0.0, fearful: 0.0, sad: 0.0, happy: 0.0, surprised: 0.0, neutral: 1.0, disgust: 0.0 }, cognitiveLoad: 40, audioUrl: '', lapNumber: 2, sector: 1 }
+];
+
+export const MOCK_RADIO_EVENTS_HAM: RadioEvent[] = [
+  { id: 'evt-1', timestamp: 15.0, driverId: 'HAM', transcript: "Bono, my tyres are gone.", emotions: { angry: 0.3, fearful: 0.4, sad: 0.0, happy: 0.0, surprised: 0.0, neutral: 0.3, disgust: 0.0 }, cognitiveLoad: 75, audioUrl: '', lapNumber: 1, sector: 2 },
+  { id: 'evt-2', timestamp: 25.5, driverId: 'BONO', transcript: "Copy Lewis, we see that. Keep managing.", emotions: { angry: 0.0, fearful: 0.0, sad: 0.0, happy: 0.0, surprised: 0.0, neutral: 1.0, disgust: 0.0 }, cognitiveLoad: 10, audioUrl: '', lapNumber: 1, sector: 1 },
+  { id: 'evt-3', timestamp: 45.0, driverId: 'HAM', transcript: "There is zero traction out of turn 4.", emotions: { angry: 0.4, fearful: 0.0, sad: 0.0, happy: 0.0, surprised: 0.0, neutral: 0.6, disgust: 0.0 }, cognitiveLoad: 65, audioUrl: '', lapNumber: 1, sector: 2 },
+  { id: 'evt-4', timestamp: 70.2, driverId: 'HAM', transcript: "He just turned in on me! Unbelievable!", emotions: { angry: 0.85, fearful: 0.0, sad: 0.0, happy: 0.0, surprised: 0.15, neutral: 0.0, disgust: 0.0 }, cognitiveLoad: 90, audioUrl: '', lapNumber: 1, sector: 3 },
+  { id: 'evt-5', timestamp: 95.0, driverId: 'HAM', transcript: "Car feels okay on this compound.", emotions: { angry: 0.0, fearful: 0.0, sad: 0.0, happy: 0.2, surprised: 0.0, neutral: 0.8, disgust: 0.0 }, cognitiveLoad: 30, audioUrl: '', lapNumber: 2, sector: 1 }
+];
+
+export const MOCK_RADIO_EVENTS_DEFAULT: RadioEvent[] = [
+  { id: 'evt-1', timestamp: 15.0, driverId: 'DRIVER', transcript: "I'm struggling with the balance.", emotions: { angry: 0.2, fearful: 0.1, sad: 0.0, happy: 0.0, surprised: 0.0, neutral: 0.7, disgust: 0.0 }, cognitiveLoad: 60, audioUrl: '', lapNumber: 1, sector: 2 },
+  { id: 'evt-2', timestamp: 25.5, driverId: 'ENGINEER', transcript: "Copy, we are checking.", emotions: { angry: 0.0, fearful: 0.0, sad: 0.0, happy: 0.0, surprised: 0.0, neutral: 1.0, disgust: 0.0 }, cognitiveLoad: 10, audioUrl: '', lapNumber: 1, sector: 1 },
+  { id: 'evt-3', timestamp: 45.0, driverId: 'DRIVER', transcript: "The wind is making it very tricky out here.", emotions: { angry: 0.1, fearful: 0.2, sad: 0.0, happy: 0.0, surprised: 0.0, neutral: 0.7, disgust: 0.0 }, cognitiveLoad: 55, audioUrl: '', lapNumber: 1, sector: 2 },
+  { id: 'evt-4', timestamp: 70.2, driverId: 'DRIVER', transcript: "I've lost the rear! Ah, touched the wall slightly.", emotions: { angry: 0.6, fearful: 0.4, sad: 0.0, happy: 0.0, surprised: 0.0, neutral: 0.0, disgust: 0.0 }, cognitiveLoad: 85, audioUrl: '', lapNumber: 1, sector: 3 },
+  { id: 'evt-5', timestamp: 95.0, driverId: 'DRIVER', transcript: "All good, car feels fine now.", emotions: { angry: 0.0, fearful: 0.0, sad: 0.0, happy: 0.2, surprised: 0.0, neutral: 0.8, disgust: 0.0 }, cognitiveLoad: 35, audioUrl: '', lapNumber: 2, sector: 1 }
+];
+
+export const MOCK_RADIO_EVENTS = MOCK_RADIO_EVENTS_VER;
+
+export const getMockRadioEvents = (driverId: string): RadioEvent[] => {
+  const driver = driverId?.toUpperCase() || '';
+  if (driver === 'VER' || driver === 'MAX') return MOCK_RADIO_EVENTS_VER;
+  if (driver === 'LEC' || driver === 'CHARLES') return MOCK_RADIO_EVENTS_LEC;
+  if (driver === 'HAM' || driver === 'LEWIS') return MOCK_RADIO_EVENTS_HAM;
+  
+  // Inject the specific driver ID into the default events
+  return MOCK_RADIO_EVENTS_DEFAULT.map(e => ({
+    ...e,
+    driverId: e.driverId === 'DRIVER' ? driverId : e.driverId
+  }));
+};
 
 // Generate a layout representing Monza Circuit
 // Scaled roughly to fit a bounding box

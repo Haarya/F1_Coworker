@@ -33,6 +33,31 @@ const DRIVER_FILES = [...RAW_DRIVER_FILES].sort((a, b) => {
   return hexA.localeCompare(hexB);
 });
 
+const DRIVER_CODES: Record<string, string> = {
+  "Max_Verstappen": "VER",
+  "Lewis_Hamilton": "HAM",
+  "Charles_Leclerc": "LEC",
+  "Lando_Norris": "NOR",
+  "Oscar_Piastri": "PIA",
+  "Carlos_Sainz": "SAI",
+  "George_Russell": "RUS",
+  "Sergio_Perez": "PER",
+  "Fernando_Alonso": "ALO",
+  "Lance_Stroll": "STR",
+  "Yuki_Tsunoda": "TSU",
+  "Nico_Hulkenberg": "HUL",
+  "Esteban_Ocon": "OCO",
+  "Alexander_Albon": "ALB",
+  "Pierre_Gasly": "GAS",
+  "Valtteri_Bottas": "BOT",
+  "Franco_Colapinto": "COL",
+  "Liam_Lawson": "LAW",
+  "Gabriel_Bortoleto": "BOR",
+  "Isack_Hadjar": "HAD",
+  "Kimi_Antonelli": "ANT",
+  "Arvid_Lindblad": "LIN",
+};
+
 export default function Drivers() {
   const { dispatch } = useRaceSession();
   const navigate = useNavigate();
@@ -45,6 +70,12 @@ export default function Drivers() {
         hex: `#${hexCode}` 
       } 
     });
+    
+    // Also set the actual 3-letter code for the API hooks
+    const namePart = filename.substring(0, filename.lastIndexOf('_'));
+    const driverCode = DRIVER_CODES[namePart] || "VER";
+    dispatch({ type: 'SET_DRIVER', payload: driverCode });
+    
     navigate('/dashboard');
   };
 

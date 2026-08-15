@@ -10,7 +10,7 @@ class LapData(BaseModel):
     sector_3: Optional[float]
 
 class TelemetryPoint(BaseModel):
-    time: float
+    sessionTime: float
     speed: float
     throttle: float
     brake: float

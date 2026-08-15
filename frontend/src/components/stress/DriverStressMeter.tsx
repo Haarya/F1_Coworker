@@ -134,6 +134,14 @@ export const DriverStressMeter: React.FC<DriverStressMeterProps> = ({ stressScor
 
   return (
     <div className="relative w-full h-full min-h-[450px] bg-[#090909] rounded-2xl border border-white/5 overflow-hidden shadow-[inset_0_0_40px_rgba(0,0,0,0.8)]">
+      {(!state.isExecuting || state.playbackTimestamp <= 16.5) && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-2 bg-[#090909]/80 backdrop-blur-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 text-white/30"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          <span className="text-[10px] text-white/50 uppercase tracking-widest font-mono text-center">
+            Awaiting Telemetry<br/>& Stress Data
+          </span>
+        </div>
+      )}
     
       {/* Centered Wrapper */}
       <div className="absolute top-0 left-1/2 w-full h-full -translate-x-1/2">

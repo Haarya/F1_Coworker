@@ -14,3 +14,4 @@ scikit-learn
 pytest
 google-genai
 joblib==1.3.2
+transformers

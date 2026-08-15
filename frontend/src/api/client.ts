@@ -36,8 +36,11 @@ export const ApiClient = {
   getRadioTranscript: (eventId: string) => 
     fetchApi<{ transcript: string; confidence: number; cognitiveLoad: number }>(`/radio/transcript/${eventId}`),
 
-  getDriverStress: (audioId: string = "sample_radio") => 
-    fetchApi<any>(`/radio/stress?audioId=${audioId}`),
+  getDriverStress: (driverId: string) => 
+    fetchApi<any>(`/radio/stress-for-driver?driver_id=${driverId}`),
+    
+  postExecutePipeline: () => 
+    fetchApi<any>(`/radio/execute-pipeline`, { method: 'POST' }),
 
   // Telemetry (Updated)
   getTelemetryLaps: (year: number, gp: string, driver: string) => 
@@ -48,7 +51,7 @@ export const ApiClient = {
 
   // Prediction (Updated)
   postLapPenalty: (data: any) => 
-    fetchApi<any>(`/prediction/lap-penalty`, { method: 'POST', body: JSON.stringify(data) }),
+    fetchApi<any>(`/prediction/lap-penalty`, { method: 'POST', body: JSON.stringify({ features: data }) }),
 
   postIntercept: (data: any) => 
     fetchApi<any>(`/prediction/intercept`, { method: 'POST', body: JSON.stringify(data) }),
